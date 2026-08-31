@@ -149,3 +149,7 @@ Key 保存在你的本机配置中。调用 AI 时，Key 和请求内容会从�
 ## 作者
 
 [yilujian](https://github.com/yilujian)
+
+## 友情链接
+
+- 感谢 [LINUX DO](https://linux.do/) 社区对开发者交流与开源分享的支持。

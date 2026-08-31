@@ -145,3 +145,7 @@ For the following services or other partnership ideas, contact me by email or We
 ## Author
 
 [yilujian](https://github.com/yilujian)
+
+## Links
+
+- Thanks to the [LINUX DO](https://linux.do/) community for supporting developer exchange and open-source sharing.
