@@ -1,0 +1,352 @@
+/* 全局通用样式 - 水墨风格 */
+
+/* 导入统一主题系统 */
+@use './themes.scss' as *;
+@use './editor-tokens.scss' as *;
+
+@font-face {
+  font-family: "Ma Shan Zheng";
+  src: url("../assets/fonts/MaShanZheng.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Noto Serif SC", "Songti SC", SimSun, serif;
+  background-color: var(--bg-main);
+  color: var(--ink-main);
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+body.desktop-runtime {
+  min-width: 1200px;
+  overflow-x: auto;
+}
+
+body.web-runtime {
+  width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+#app {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* 统一滚动条：默认隐藏，悬浮时显示 */
+* {
+  scrollbar-width: none;
+}
+
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+// *:hover {
+//   scrollbar-width: thin;
+//   scrollbar-color: var(--ui-border, #e5e7eb) transparent;
+// }
+
+// *:hover::-webkit-scrollbar {
+//   width: 4px;
+//   height: 4px;
+// }
+
+// *:hover::-webkit-scrollbar-thumb {
+//   background: var(--ui-border, #e5e7eb);
+//   border-radius: 2px;
+// }
+
+// *:hover::-webkit-scrollbar-thumb:hover {
+//   background: var(--ink-sec, #d1d5db);
+// }
+
+/* 背景图容器（由主题系统控制样式） */
+.ink-bg-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.ink-bg-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  /* opacity 和 filter 由主题系统控制 */
+}
+
+/* 纸张纹理（由主题系统控制样式） */
+.paper-texture {
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* 融合卡片样式 */
+.fusion-card {
+  background: var(--card-bg, var(--ui-glass-bg));
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  box-shadow: var(--card-shadow, var(--ui-shadow));
+  border: 1px solid var(--ui-border);
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: var(--card-bg-hover, var(--ui-glass-bg-hover));
+    transform: translateY(-2px);
+    box-shadow: var(--card-shadow-hover, 0 10px 25px rgba(0, 0, 0, 0.08));
+  }
+}
+
+/* 工具类 */
+.text-ink-main {
+  color: var(--ink-main);
+}
+
+.text-ink-sec {
+  color: var(--ink-sec);
+}
+
+.text-ink-accent {
+  color: var(--ink-accent);
+}
+
+.bg-ink-main {
+  background-color: var(--ink-main);
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Element Plus 组件样式覆盖 */
+.el-button--primary {
+  background: var(--ink-main);
+  /* 自动适配深浅 */
+  color: var(--bg-main);
+  /* 文字反色 */
+  // border-color: var(--ink-main) !important;
+
+  &:hover,
+  &:focus {
+    background: var(--ink-accent);
+    /* 悬浮变强调色 */
+    color: var(--on-inverse);
+  }
+}
+
+.danger-confirm-btn,
+.work-delete-confirm-btn {
+  background: var(--state-info) !important;
+  border-color: var(--state-info) !important;
+  color: var(--state-danger-strong-on) !important;
+
+  &:hover,
+  &:focus {
+    background: var(--state-danger-strong-bg) !important;
+    border-color: var(--state-danger-strong-bg) !important;
+    color: var(--state-danger-strong-on) !important;
+  }
+
+  &:active {
+    background: var(--state-danger-on) !important;
+    border-color: var(--state-danger-on) !important;
+    color: var(--state-danger-strong-on) !important;
+  }
+}
+
+.ink-confirm {
+  background: var(--card-bg, var(--ui-glass-bg)) !important;
+  border: 1px solid var(--ui-border) !important;
+  color: var(--ink-main) !important;
+  box-shadow: var(--ui-shadow) !important;
+}
+
+.ink-confirm .el-message-box__title,
+.ink-confirm .el-message-box__content {
+  color: var(--ink-main) !important;
+}
+
+.ink-confirm .el-message-box__message,
+.ink-confirm .el-message-box__headerbtn .el-message-box__close {
+  color: var(--ink-sec) !important;
+}
+
+.ink-confirm .el-message-box__status {
+  color: var(--state-warning) !important;
+}
+
+.ink-confirm .el-button:not(.ink-confirm-btn) {
+  background: var(--btn-outline-bg) !important;
+  border-color: var(--btn-outline-border) !important;
+  color: var(--ink-main) !important;
+
+  &:focus,
+  &:focus-visible {
+    background: var(--btn-outline-bg) !important;
+    border-color: var(--btn-outline-border) !important;
+    color: var(--ink-main) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--btn-outline-border) 48%, transparent) !important;
+  }
+
+  &:hover {
+    background: var(--btn-outline-hover-bg) !important;
+    border-color: var(--btn-ghost-hover-border) !important;
+    color: var(--ink-main) !important;
+  }
+}
+
+.ink-confirm-btn,
+.ink-confirm-btn.el-button,
+.ink-confirm-btn.el-button--primary {
+  background: var(--btn-primary-bg) !important;
+  border-color: var(--btn-primary-bg) !important;
+  color: var(--btn-primary-color) !important;
+
+  /* 确认弹窗的键盘焦点只显示轮廓，颜色变化仅保留给鼠标悬浮。 */
+  &:focus,
+  &:focus-visible {
+    background: var(--btn-primary-bg) !important;
+    border-color: var(--btn-primary-bg) !important;
+    color: var(--btn-primary-color) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--btn-primary-bg) 32%, transparent) !important;
+  }
+
+  &:hover {
+    background: var(--btn-primary-hover-bg) !important;
+    border-color: var(--btn-primary-hover-bg) !important;
+    color: var(--btn-primary-hover-color) !important;
+  }
+}
+
+.el-menu {
+  background-color: transparent !important;
+  border: none !important;
+}
+
+.el-menu-item {
+  color: var(--ink-sec) !important;
+
+  &:hover {
+    background: linear-gradient(90deg, var(--overlay-hover) 0%, transparent 100%) !important;
+    color: var(--ink-main) !important;
+  }
+
+  &.is-active {
+    background: linear-gradient(90deg, var(--overlay-active) 0%, transparent 100%) !important;
+    color: var(--ink-main) !important;
+    font-weight: bold !important;
+    border-left: 3px solid var(--ink-main) !important;
+    text-shadow: var(--nav-active-text-shadow, 0 1px 0 rgba(255, 255, 255, 0.6));
+  }
+}
+
+/* 页面过渡动画 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* 桌面端保留原有最小宽度策略，网页端由页面响应式接管。 */
+
+/* Font Awesome 图标样式 */
+i.fa-solid,
+i.fa-regular {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* Font Awesome 图标在 Element Plus 按钮中的样式 */
+.el-button {
+
+  i.fa-solid,
+  i.fa-regular {
+    &:not(:only-child):not(:last-child) {
+      margin-right: 6px;
+    }
+
+    &:not(:only-child):last-child {
+      margin-left: 6px;
+    }
+  }
+}
+
+/* Font Awesome 图标大小调整 */
+.el-button--small {
+
+  i.fa-solid,
+  i.fa-regular {
+    font-size: 14px;
+  }
+}
+
+.el-radio-button {
+
+  i.fa-solid,
+  i.fa-regular {
+    font-size: 14px;
+  }
+}
+
+
+.el-dialog__header {
+  .el-dialog__title {
+    color: var(--ink-main);
+    font-size: 16px;
+  }
+
+  .el-dialog__headerbtn {
+    .el-dialog__close {
+      color: var(--ink-main);
+      transition: color 0.3s;
+    }
+
+    &:hover .el-dialog__close {
+      color: var(--ink-accent);
+    }
+  }
+}

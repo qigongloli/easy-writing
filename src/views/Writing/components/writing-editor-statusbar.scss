@@ -1,0 +1,397 @@
+/* WritingEditor 状态栏样式（scoped，经 SFC style src 引入）。
+   其余区域样式在 writing-editor-shell.scss。 */
+.writing-editor {
+  .editor-status-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 0 16px;
+    font-size: 12px;
+    color: var(--ink-sec);
+    background: var(--statusbar-bg);
+    // backdrop-filter: blur(4px);
+    border-top: 1px solid var(--divider);
+
+    .status-center {
+      flex: 0 0 auto;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      overflow: hidden;
+      padding: 0;
+    }
+
+    .status-right {
+      display: flex;
+      flex: 0 1 auto;
+      min-width: 0;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-end;
+      overflow-x: hidden;
+      overflow-y: hidden;
+      white-space: nowrap;
+
+      > * {
+        flex: 0 0 auto;
+      }
+
+      .divider {
+        flex: 0 0 auto;
+        padding-left: 10px;
+        border-left: 1px solid var(--divider);
+        white-space: nowrap;
+      }
+
+      .sensitive-status,
+      .word-count-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        line-height: 1;
+
+        i {
+          font-size: 12px;
+        }
+      }
+
+      .sensitive-status.has-risk strong {
+        color: var(--state-danger);
+      }
+
+      .sync-mode-btn,
+      .sync-now-btn {
+        display: inline-flex;
+        align-items: center;
+        flex: 0 0 auto;
+        gap: 6px;
+        height: 24px;
+        padding: 0 10px;
+        border-radius: 999px;
+        border: 1px solid var(--ui-border, rgba(255, 255, 255, 0.1));
+        background: var(--panel-bg, rgba(255, 255, 255, 0.04));
+        color: var(--ink-sec);
+        font-size: 12px;
+        line-height: 1;
+        white-space: nowrap;
+        cursor: pointer;
+        transition:
+          color 0.2s ease,
+          border-color 0.2s ease,
+          background 0.2s ease;
+
+        &:hover:not(:disabled) {
+          color: var(--ink-main);
+          border-color: var(--ui-border-hover, rgba(255, 255, 255, 0.2));
+          background: var(--panel-header-bg, rgba(255, 255, 255, 0.08));
+        }
+
+        &:disabled {
+          cursor: not-allowed;
+          opacity: 0.55;
+        }
+      }
+
+      .sync-mode-btn.is-local-only {
+        color: var(--state-warning);
+        border-color: var(--state-warning-border);
+      }
+
+      strong {
+        color: var(--ink-main);
+        font-weight: bold;
+      }
+
+      .plan-entry {
+        display: inline-flex;
+        align-items: center;
+        flex: 0 0 auto;
+        gap: 8px;
+        border-radius: 999px;
+        border: 1px solid var(--ui-border, rgba(255, 255, 255, 0.1));
+        background: var(--panel-bg, rgba(255, 255, 255, 0.04));
+        color: var(--ink-sec);
+        cursor: pointer;
+        font-size: 12px;
+        line-height: 1;
+        white-space: nowrap;
+        padding: 4px 14px 4px 10px;
+        transition:
+          color 0.2s ease,
+          background 0.2s ease,
+          border-color 0.2s ease;
+
+        &:hover {
+          color: var(--ink-main);
+          border-color: var(--ui-border-hover, rgba(255, 255, 255, 0.2));
+          background: var(--panel-header-bg, rgba(255, 255, 255, 0.1));
+        }
+
+        &.is-empty {
+          color: var(--ink-main);
+
+          .progress {
+            opacity: 0;
+          }
+        }
+
+        strong {
+          font-weight: 600;
+          color: var(--ink-main);
+        }
+
+        .plan-text {
+          display: inline-flex;
+          align-items: center;
+          // 「剩」和数字是两个 flex item，item 末尾的空格会被裁掉，
+          // 模板里那个空格排不出来，只能靠 gap。与 .word-count-status 保持一致。
+          gap: 4px;
+          min-width: max-content;
+        }
+      }
+
+      .plan-mini-progress {
+        width: 18px;
+        height: 18px;
+        display: block;
+
+        .track {
+          fill: none;
+          stroke: color-mix(in srgb, var(--ink-main) 34%, transparent);
+          stroke-width: 2;
+        }
+
+        .progress {
+          fill: none;
+          stroke: var(--ink-accent);
+          stroke-width: 2;
+          stroke-linecap: round;
+          transform: rotate(-90deg);
+          transform-origin: 50% 50%;
+          transition: stroke-dashoffset 0.3s ease;
+        }
+      }
+
+      .ai-status-btn {
+        display: inline-flex;
+        align-items: center;
+        flex: 0 0 auto;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--ui-border, rgba(255, 255, 255, 0.1));
+        background: var(--panel-bg, rgba(255, 255, 255, 0.04));
+        color: var(--ink-sec);
+        font-size: 12px;
+        line-height: 1;
+        white-space: nowrap;
+        cursor: pointer;
+        transition:
+          color 0.2s ease,
+          border-color 0.2s ease,
+          background 0.2s ease;
+
+        .arrow {
+          font-size: 10px;
+          opacity: 0.75;
+        }
+
+        &:hover {
+          color: var(--ink-main);
+          border-color: var(--ui-border-hover, rgba(255, 255, 255, 0.2));
+          background: var(--panel-header-bg, rgba(255, 255, 255, 0.08));
+        }
+
+        &.is-active {
+          color: var(--ink-main);
+          border-color: var(--ink-accent);
+        }
+
+        &.is-thinking {
+          color: var(--ink-accent);
+        }
+
+        &.is-disabled {
+          color: var(--ink-sec);
+          border-color: var(--ui-border, rgba(255, 255, 255, 0.1));
+          background: transparent;
+        }
+      }
+    }
+
+    .save-status-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      height: 24px;
+      min-width: 0;
+      font-size: 12px;
+      line-height: 1;
+      white-space: nowrap;
+
+      &.success {
+        color: var(--state-success);
+      }
+
+      &.synced {
+        color: var(--state-success);
+      }
+
+      &.dirty {
+        color: var(--state-warning);
+      }
+
+      &.local_saved,
+      &.pending,
+      &.offline,
+      &.local_only {
+        color: var(--state-warning);
+      }
+
+      &.saving {
+        color: var(--ink-accent);
+      }
+
+      &.syncing {
+        color: var(--ink-accent);
+      }
+
+      &.error,
+      &.conflict {
+        color: var(--state-danger);
+      }
+
+      &.idle {
+        color: var(--ink-sec);
+      }
+
+      &.is-ai-thinking {
+        color: var(--ink-accent);
+      }
+    }
+
+    &.compact-mode {
+      padding: 0 10px;
+      gap: 6px;
+
+      .status-right {
+        gap: 7px;
+      }
+
+      .sync-mode-btn,
+      .sync-now-btn {
+        padding: 0 8px;
+        gap: 5px;
+      }
+
+      .ai-status-btn {
+        padding: 4px 7px;
+
+        span {
+          min-width: max-content;
+        }
+      }
+
+      .plan-entry {
+        padding: 4px 9px 4px 8px;
+
+        .plan-text {
+          min-width: max-content;
+        }
+      }
+
+      .divider {
+        padding-left: 7px;
+      }
+    }
+
+    &.status-tight-mode {
+      padding: 0 7px;
+      gap: 5px;
+
+      .status-right {
+        gap: 6px;
+      }
+
+      .sync-mode-btn,
+      .sync-now-btn {
+        padding: 0 7px;
+        gap: 4px;
+      }
+
+      .ai-status-btn {
+        height: 24px;
+        padding: 4px 6px;
+        gap: 4px;
+      }
+
+      .plan-entry {
+        height: 24px;
+        padding: 4px 8px 4px 6px;
+        gap: 5px;
+      }
+
+      .divider {
+        padding-left: 5px;
+      }
+    }
+
+    &.status-icon-only-mode {
+      .status-center {
+        flex: 0 0 22px;
+        width: 22px;
+        min-width: 22px;
+        justify-content: center;
+      }
+
+      .save-status-icon {
+        width: 22px;
+        min-width: 22px;
+        gap: 0;
+      }
+
+      .save-status-label,
+      .sync-btn-label,
+      .ai-status-btn span,
+      .ai-status-btn .arrow,
+      .plan-entry .plan-text,
+      .sensitive-status .status-label,
+      .sensitive-status strong,
+      .word-count-status .status-label,
+      .word-count-status strong {
+        display: none;
+      }
+
+      .sync-mode-btn,
+      .sync-now-btn,
+      .ai-status-btn,
+      .plan-entry {
+        width: 26px;
+        height: 24px;
+        padding: 0;
+        gap: 0;
+        justify-content: center;
+      }
+
+      .plan-entry {
+        width: 28px;
+      }
+
+      .sensitive-status,
+      .word-count-status {
+        width: 22px;
+        min-width: 22px;
+        justify-content: center;
+        gap: 0;
+      }
+    }
+  }
+}

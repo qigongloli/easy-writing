@@ -1,0 +1,807 @@
+/* ============================================================
+   Tiptap 编辑器核心样式
+   所有主题特定样式已移至 themes.scss
+   字体设置通过 CSS 变量从 Vue 组件传入
+   ============================================================ */
+
+/* 1. ProseMirror 编辑器基础样式 */
+.ProseMirror {
+  /* 使用 CSS 变量接收字体设置，提供合理的默认值 */
+  font-size: var(--editor-font-size, 18px);
+  color: var(--editor-color, var(--ink-main));
+  /* 最小高度从父容器继承，让分隔线可以铺满编辑区域 */
+  min-height: inherit;
+  outline: none;
+  line-height: var(--editor-line-height, 2);
+  font-weight: var(--editor-font-weight, 400);
+  font-family: var(--editor-font-family, "Noto Serif SC", "Songti SC", SimSun, serif);
+  text-align: var(--editor-text-align, left);
+  padding: 0;
+  position: relative;
+  z-index: 1;
+  /* 添加过渡效果，使字体变化更平滑 */
+  transition: font-size 0.2s ease, line-height 0.2s ease, font-weight 0.2s ease;
+
+  /* 原生选区样式 - 与持久化选区保持一致 */
+  &::selection {
+    background-color: transparent;
+    color: var(--editor-color, var(--ink-main));
+    -webkit-text-fill-color: inherit;
+    // text-shadow: 0 0 0.5px currentColor, 0 0 0.5px currentColor;
+  }
+
+  *::selection {
+    background-color: transparent;
+    color: var(--editor-color, var(--ink-main));
+    -webkit-text-fill-color: inherit;
+    // text-shadow: 0 0 0.5px currentColor, 0 0 0.5px currentColor;
+  }
+
+  /* 段落样式 - 使用 CSS 变量控制段间距 */
+  p {
+    margin: 0;
+    /* 使用 calc 和 CSS 变量控制段间空行 */
+    margin-bottom: calc(var(--ruler-step, 28px) * var(--paragraph-gap-factor, 0));
+    text-indent: 2em;
+    padding: 0;
+    position: relative;
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
+  /* Placeholder 样式 */
+  .is-editor-empty:first-child::before {
+    color: var(--ink-sec);
+    opacity: 0.5;
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+    font-size: 14px;
+  }
+
+  .is-editor-empty:has(.ghost-text)::before,
+  p.is-editor-empty:has(.ghost-text)::before {
+    display: none !important;
+    content: none !important;
+  }
+
+  /* 查找高亮 */
+  .find-highlight {
+    background-color: var(--find-highlight-bg, #fff6a0);
+    color: #000;
+  }
+
+  .find-highlight-active {
+    background-color: var(--find-highlight-active-bg, #ffd86b);
+    color: #000;
+  }
+
+  /* AI 幽灵文字样式 */
+  .ai-ghost-wrapper {
+    position: relative;
+    display: inline;
+  }
+
+  .ghost-text {
+    color: var(--ink-sec);
+    pointer-events: none;
+    font-style: italic;
+    opacity: 0.6;
+  }
+
+  /* AI 幽灵文字提示框 */
+  .ai-ghost-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+    padding: 4px 8px;
+    background-color: var(--ui-glass-bg);
+    color: var(--ink-main);
+    border: 1px solid var(--ui-border);
+    border-radius: 4px;
+    font-size: 12px;
+    line-height: 1;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: var(--ui-shadow);
+    backdrop-filter: blur(8px);
+    animation: aiTooltipFadeIn 0.2s ease-out;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 10px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: var(--ui-glass-bg) transparent transparent transparent;
+    }
+
+    .key-cap {
+      display: inline-block;
+      padding: 0 6px;
+      height: 18px;
+      line-height: 17px;
+      background-color: var(--tag-bg);
+      border: 1px solid var(--tag-border);
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--ink-main);
+      font-family: monospace;
+    }
+  }
+}
+
+/* 2. 持久化选区样式 - 全局样式，不使用 scoped */
+.persistent-selection {
+  background-color: var(--selection-bg-color) !important;
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  padding: 2px 0;
+  margin: 0;
+  /* 增强文字可见性 - 与原生选区一致 */
+  text-shadow: 0 0 0.5px currentColor, 0 0 0.5px currentColor;
+  font-weight: inherit;
+}
+
+/* 确保编辑器聚焦和失焦时，持久化选区样式一致 */
+.ProseMirror-focused .persistent-selection,
+.ProseMirror .persistent-selection {
+  background-color: var(--selection-bg-color) !important;
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
+  text-shadow: 0 0 0.5px currentColor, 0 0 0.5px currentColor;
+}
+
+/* 3. AI Review 高亮样式 - 全局样式 */
+.ai-review-highlight {
+  background-color: var(--ai-review-bg) !important;
+  border-bottom: 2px solid var(--ai-review-border);
+  border-radius: 2px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  transition: background-color 0.3s;
+}
+
+/* 4. 敏感词高亮样式 - 全局样式 */
+.sensitive-word {
+  border-bottom: 0;
+  background-color: transparent;
+  box-shadow: none;
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: var(--sensitive-word-border, #dc2626);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+  cursor: help;
+}
+
+.entity-highlight {
+  border-bottom: 2px solid transparent;
+  border-radius: 2px;
+  cursor: help;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.entity-highlight-character {
+  border-bottom-color: rgba(180, 83, 9, 0.7);
+  background: rgba(217, 119, 6, 0.16);
+  box-shadow: inset 0 -0.55em 0 rgba(217, 119, 6, 0.12);
+}
+
+.entity-highlight-setting {
+  border-bottom-color: rgba(15, 118, 110, 0.68);
+  background: rgba(20, 184, 166, 0.13);
+  box-shadow: inset 0 -0.55em 0 rgba(20, 184, 166, 0.1);
+}
+
+/* 审稿建议正文标注：左色条 + 浅底色，颜色即等级（红=需确认/橙=建议修改/蓝=可优化）。
+   色条用绝对定位伪元素画在段落外侧，不改 padding/margin——任何盒模型改动都会
+   让命中段相对其他段落偏移（2026-07-30 实测教训）。 */
+.issue-highlight {
+  position: relative;
+  border-radius: 2px;
+  transition: background-color 0.2s ease;
+}
+
+.issue-highlight::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: -10px;
+  width: 3px;
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.issue-level-blocking {
+  background: rgba(245, 108, 108, 0.08);
+
+  &::after {
+    background: rgba(245, 108, 108, 0.85);
+  }
+}
+
+.issue-level-advise {
+  background: rgba(230, 162, 60, 0.09);
+
+  &::after {
+    background: rgba(230, 162, 60, 0.85);
+  }
+}
+
+.issue-level-polish {
+  background: rgba(64, 158, 255, 0.07);
+
+  &::after {
+    background: rgba(64, 158, 255, 0.8);
+  }
+}
+
+/* 用户编辑过的命中段：改没改好要等重新质检，降为灰色避免误导 */
+.issue-highlight.is-edited {
+  background: rgba(144, 147, 153, 0.06);
+
+  &::after {
+    background: rgba(144, 147, 153, 0.6);
+  }
+}
+
+/* 选中态：底色加深一档、色条加粗，并露出"建议 N"小签（平时无徽章）。
+   全部只改颜色与伪元素宽度，正文排版零位移。 */
+.issue-highlight.is-active::after {
+  left: -11px;
+  width: 4px;
+}
+
+.issue-level-blocking.is-active {
+  background: rgba(245, 108, 108, 0.16);
+}
+
+.issue-level-advise.is-active {
+  background: rgba(230, 162, 60, 0.17);
+}
+
+.issue-level-polish.is-active {
+  background: rgba(64, 158, 255, 0.15);
+}
+
+.issue-highlight.is-active::before {
+  content: attr(data-issue-label);
+  position: absolute;
+  top: 2px;
+  left: -17px;
+  transform: translateX(-100%);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  line-height: 18px;
+  white-space: nowrap;
+  color: #fff;
+  background: rgba(64, 158, 255, 0.85);
+}
+
+.issue-level-blocking.is-active::before {
+  background: rgba(245, 108, 108, 0.9);
+}
+
+.issue-level-advise.is-active::before {
+  background: rgba(230, 162, 60, 0.92);
+}
+
+/* ===== AI 局部修改预览卡（脱离文档流的悬浮面板，贴在选中段下方跟随滚动） ===== */
+.issue-polish-card {
+  position: fixed;
+  z-index: 4100;
+  display: grid;
+  gap: 10px;
+  max-height: min(70vh, 560px);
+  overflow-y: auto;
+  padding: 14px 16px;
+  border: 1px solid var(--ui-border, var(--divider));
+  border-radius: 10px;
+  /* 与全站弹层同配方（ink-popover-visuals）：高不透明玻璃底 + 毛玻璃 */
+  background: var(--ui-glass-bg-hover, rgba(255, 255, 255, 0.95));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: var(--ui-shadow, 0 6px 24px rgba(0, 0, 0, 0.1));
+  font-size: 13px;
+  line-height: 1.7;
+  user-select: text;
+}
+
+.issue-polish-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--ink-sec);
+
+  button {
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 1px solid var(--divider);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--ink-main);
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.issue-polish-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  strong {
+    font-size: 13px;
+    color: var(--ink-main);
+  }
+
+  em {
+    padding: 0 6px;
+    border: 1px solid rgba(64, 158, 255, 0.5);
+    border-radius: 4px;
+    font-style: normal;
+    font-size: 11px;
+    line-height: 18px;
+    color: #1c6dbb;
+  }
+
+  span {
+    font-size: 11px;
+    color: var(--ink-tertiary, var(--ink-sec));
+  }
+}
+
+.issue-polish-block {
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--ink-main) 4%, transparent);
+
+  small {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-tertiary, var(--ink-sec));
+  }
+
+  p {
+    margin: 0;
+    color: var(--ink-main);
+  }
+
+  mark {
+    padding: 0 1px;
+    border-radius: 2px;
+    color: inherit;
+    background: rgba(245, 108, 108, 0.22);
+  }
+
+  &.is-result {
+    background: rgba(103, 194, 58, 0.09);
+
+    small {
+      color: #4d8f3a;
+    }
+  }
+}
+
+.issue-polish-loading,
+.issue-polish-error {
+  color: var(--ink-sec);
+}
+
+.issue-polish-error {
+  color: #c0392b;
+}
+
+.issue-polish-extra-toggle {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #1c6dbb;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.issue-polish-extra-input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--divider);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink-main);
+  font: inherit;
+  font-size: 12px;
+  resize: vertical;
+}
+
+.issue-polish-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+
+  button {
+    padding: 5px 16px;
+    border: 1px solid var(--divider);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--ink-main);
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &.is-primary {
+      border-color: transparent;
+      background: var(--ink-main);
+      color: var(--paper-bg, #fff);
+    }
+  }
+}
+
+/* "定位原文"落点闪烁 */
+@keyframes issue-flash-pulse {
+  0%,
+  100% {
+    box-shadow: none;
+  }
+  35% {
+    box-shadow: 0 0 0 3px rgba(230, 162, 60, 0.35);
+  }
+  70% {
+    box-shadow: 0 0 0 3px rgba(230, 162, 60, 0.2);
+  }
+}
+
+.issue-flash {
+  animation: issue-flash-pulse 0.8s ease-in-out 2;
+}
+
+.entity-hover-card {
+  position: fixed;
+  z-index: 4200;
+  width: 320px;
+  max-width: calc(100vw - 24px);
+  padding: 12px;
+  pointer-events: auto;
+  color: var(--ink-main);
+}
+
+.entity-hover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.entity-hover-heading {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.entity-hover-title {
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.entity-hover-count {
+  flex-shrink: 0;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--tag-bg);
+  border: 1px solid var(--tag-border);
+  color: var(--ink-sec);
+  font-size: 12px;
+}
+
+.entity-hover-action {
+  flex-shrink: 0;
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--ui-border);
+  border-radius: 6px;
+  background: var(--btn-ghost-bg);
+  color: var(--ink-sec);
+  font-size: 12px;
+  line-height: 22px;
+  cursor: pointer;
+  transition: all 0.16s ease;
+
+  &:hover {
+    color: #b45309;
+    border-color: rgba(217, 119, 6, 0.35);
+    background: rgba(217, 119, 6, 0.1);
+  }
+}
+
+.entity-hover-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.entity-hover-item + .entity-hover-item {
+  padding-top: 10px;
+  border-top: 1px solid var(--ui-border);
+}
+
+.entity-hover-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.entity-hover-kind {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+
+  &.is-character {
+    color: #92400e;
+    background: rgba(217, 119, 6, 0.14);
+  }
+
+  &.is-setting {
+    color: #0f766e;
+    background: rgba(20, 184, 166, 0.13);
+  }
+}
+
+.entity-hover-label {
+  color: var(--ink-sec);
+  font-size: 12px;
+}
+
+.entity-hover-summary {
+  margin: 0;
+  color: var(--ink-sec);
+  font-size: 13px;
+  line-height: 1.6;
+
+  &.is-empty {
+    opacity: 0.65;
+  }
+}
+
+.sensitive-word.sensitive-word {
+  border-bottom: 0;
+  background-color: transparent;
+  box-shadow: none;
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: var(--sensitive-word-border, #dc2626);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+}
+
+/* 5. 动画效果 */
+@keyframes aiTooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 6. 编辑器容器样式 */
+.editor-content-area {
+  width: 100%;
+  min-height: 400px;
+}
+
+/* 7. 网格线样式 - 通过 CSS 类控制 */
+.editor-wrapper {
+  position: relative;
+
+  /* 实线网格 */
+  &.ruler-solid::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(var(--ruler-step, 28px) - 1px),
+      var(--ruler-color, rgba(128, 128, 128, 0.15)) calc(var(--ruler-step, 28px) - 1px),
+      var(--ruler-color, rgba(128, 128, 128, 0.15)) var(--ruler-step, 28px)
+    );
+  }
+
+  /* 虚线网格 */
+  &.ruler-dashed::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image: linear-gradient(
+      to right,
+      var(--ruler-color, rgba(128, 128, 128, 0.18)) 0,
+      var(--ruler-color, rgba(128, 128, 128, 0.18)) 6px,
+      transparent 6px,
+      transparent 12px
+    );
+    background-size: 12px 1px;
+    background-repeat: repeat;
+    -webkit-mask-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(var(--ruler-step, 28px) - 1px),
+      #000 calc(var(--ruler-step, 28px) - 1px),
+      #000 var(--ruler-step, 28px)
+    );
+    mask-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(var(--ruler-step, 28px) - 1px),
+      #000 calc(var(--ruler-step, 28px) - 1px),
+      #000 var(--ruler-step, 28px)
+    );
+  }
+
+  /* 无网格 */
+  &.ruler-none::before {
+    display: none;
+  }
+}
+
+/* 8. 章节标题样式 - 使用 CSS 变量 */
+.chapter-title-input {
+  font-size: var(--title-font-size, 24px) !important;
+  font-weight: var(--editor-font-weight, 400) !important;
+  font-family: var(--editor-font-family, system-ui, -apple-system, sans-serif) !important;
+}
+
+/* 9. 打字特效 */
+.particles-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+/* 挥毫 (Splash) */
+.effect-splash-drop {
+  position: absolute;
+  background-color: var(--ink-main);
+  border-radius: 50%;
+  opacity: 0.9;
+}
+
+/* 墨池涟漪 (Ripple) */
+.effect-ripple {
+  position: absolute;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  box-shadow: 0 0 0 2px rgba(28, 25, 23, 0.8);
+  background: rgba(28, 25, 23, 0.1);
+  animation: rippleStrong 0.7s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+}
+
+@keyframes rippleStrong {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 0.8;
+    box-shadow: 0 0 0 4px rgba(28, 25, 23, 0.8);
+  }
+
+  100% {
+    width: 70px;
+    height: 70px;
+    opacity: 0;
+    box-shadow: 0 0 0 0px rgba(28, 25, 23, 0);
+    background: rgba(28, 25, 23, 0);
+  }
+}
+
+/* 流云墨烟 (Mist) */
+.effect-mist {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(40, 40, 40, 0.9) 0%, rgba(100, 100, 100, 0.2) 60%, transparent 100%);
+  filter: blur(3px);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0;
+  animation: mistFade 1s ease-out forwards;
+}
+
+@keyframes mistFade {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: translate(-50%, -80px) scale(2);
+    opacity: 0;
+  }
+}
+
+/* 烈焰 (Fire) */
+.effect-fire-flame {
+  position: absolute;
+  /* 关键：形状不是圆，而是类似火苗的水滴形 */
+  border-radius: 0 50% 50% 50%;
+  transform: rotate(45deg);
+  /* 旋转使其尖端向上 */
+  background: radial-gradient(circle at center, #fbbf24 0%, #ef4444 80%);
+  /* 关键：混合模式让重叠部分变亮，像真实火焰中心 */
+  mix-blend-mode: screen;
+  filter: blur(1px);
+  /* 轻微模糊，融合边缘 */
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+/* 鼓励 (Cheer) */
+.effect-cheer-text {
+  position: absolute;
+  font-size: 14px;
+  font-weight: bold;
+  color: #b45309;
+  /* 琥珀色 */
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+  pointer-events: none;
+  font-family: system-ui, sans-serif;
+  /* 用非衬线体更清晰 */
+  white-space: nowrap;
+}
+
+/* --- 自爆模式样式已移至 index.vue --- */

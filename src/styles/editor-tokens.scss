@@ -1,0 +1,21 @@
+/* Editor-specific theme tokens (status bar, paper). 色值随主题规范联动 */
+
+.theme-new {
+  --statusbar-bg: rgba(251, 250, 246, 0.55);
+  --editor-paper-bg: rgba(255, 253, 248, 0.94);
+}
+
+.theme-yellow {
+  --statusbar-bg: rgba(247, 238, 220, 0.55);
+  --editor-paper-bg: rgba(252, 242, 220, 0.94);
+}
+
+.theme-green {
+  --statusbar-bg: rgba(242, 241, 231, 0.55);
+  --editor-paper-bg: rgba(247, 245, 233, 0.94);
+}
+
+.theme-dark {
+  --statusbar-bg: rgba(43, 41, 36, 0.85);
+  --editor-paper-bg: rgba(33, 31, 27, 0.94);
+}

@@ -1,0 +1,1462 @@
+/* 水墨风格组件样式库 */
+
+/* 1. 按钮基础样式 */
+.ink-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  overflow: hidden;
+  user-select: none;
+  border: 1px solid transparent;
+  outline: none;
+  font-family: inherit;
+
+  i {
+    margin-right: 6px;
+    font-size: 14px;
+    transition: transform 0.3s ease;
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+/* 尺寸变体：小号按钮 */
+.ink-btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 4px;
+
+  i {
+    margin-right: 4px;
+    font-size: 12px;
+  }
+}
+
+/* 主要按钮 */
+.ink-btn-primary {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-color);
+  border: 1px solid var(--btn-primary-bg);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+
+  /* 流光层 */
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(120deg,
+        transparent 20%,
+        rgba(255, 255, 255, 0.1) 40%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0.1) 60%,
+        transparent 80%);
+    transform: skewX(-20deg);
+    transition: left 0.5s ease;
+    pointer-events: none;
+  }
+
+  &:hover {
+    background: var(--btn-primary-hover-bg);
+    border-color: var(--btn-primary-hover-bg);
+    color: var(--btn-primary-hover-color);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    transform: translateY(-1px);
+
+    &::before {
+      left: 100%;
+      transition: left 0.7s ease;
+    }
+
+    i {
+      animation: snip 0.5s ease;
+    }
+  }
+
+  &:disabled {
+    background: #9ca3af;
+    border-color: #9ca3af;
+    color: #fff;
+    box-shadow: none;
+
+    &::before {
+      display: none;
+    }
+  }
+
+}
+
+/* 次要按钮 */
+.ink-btn-outline {
+  background: var(--btn-outline-bg);
+  color: var(--ink-sec);
+  border: 1px solid var(--btn-outline-border);
+
+  &:hover {
+    color: var(--ink-main);
+    border-color: var(--ink-main);
+    background: var(--ui-glass-bg-hover);
+
+    i {
+      transform: translateX(-2px);
+    }
+  }
+
+  &:disabled {
+    background: rgba(107, 114, 128, 0.12);
+    border-color: rgba(107, 114, 128, 0.35);
+    color: #6b7280;
+  }
+}
+
+/* 弱化按钮 */
+.ink-btn-ghost {
+  background: transparent;
+  color: var(--ink-sec);
+  border: 1px solid transparent;
+
+  &:hover {
+    color: var(--ink-main);
+    border-color: var(--btn-outline-border);
+    background: var(--ui-glass-bg-hover);
+  }
+
+  &:disabled {
+    background: rgba(107, 114, 128, 0.1);
+    border-color: rgba(107, 114, 128, 0.24);
+    color: #6b7280;
+  }
+}
+
+/* 小号操作按钮 */
+.ink-btn-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+  padding: 6px 12px;
+  border: 1px solid var(--btn-outline-border);
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--ink-sec);
+  background: var(--btn-outline-bg);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+
+  &:hover {
+    color: var(--ink-main);
+    border-color: var(--ink-main);
+    background: var(--ui-glass-bg-hover);
+  }
+
+  i {
+    font-size: 12px;
+  }
+
+  .btn-text {
+    white-space: nowrap;
+  }
+}
+
+/* 强调按钮 */
+.ink-btn-accent {
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--ink-accent, #b45309);
+  border: 1px solid rgba(180, 83, 9, 0.2);
+
+  &:hover {
+    background: var(--ink-accent);
+    color: #fff;
+    border-color: var(--ink-accent);
+    box-shadow: 0 4px 12px rgba(180, 83, 9, 0.25);
+
+    i {
+      animation: snip 0.5s ease;
+    }
+  }
+
+  &:disabled {
+    background: rgba(107, 114, 128, 0.12);
+    border-color: rgba(107, 114, 128, 0.35);
+    color: #6b7280;
+    box-shadow: none;
+  }
+}
+
+.theme-dark {
+  .ink-btn-accent:not(:disabled) {
+    background: rgba(255, 255, 255, 0.82);
+    border-color: rgba(234, 179, 8, 0.5);
+    color: #1c1917;
+    font-weight: 600;
+  }
+
+  .ink-btn-accent:hover:not(:disabled) {
+    background: #eab308;
+    border-color: #eab308;
+    color: #1c1917;
+    box-shadow: 0 4px 12px rgba(234, 179, 8, 0.26);
+  }
+
+  .ink-btn-primary:disabled {
+    background: rgba(255, 255, 255, 0.22);
+    border-color: rgba(255, 255, 255, 0.24);
+    color: rgba(255, 255, 255, 0.84);
+  }
+
+  .ink-btn-outline:disabled,
+  .ink-btn-ghost:disabled,
+  .ink-btn-accent:disabled {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.72);
+  }
+}
+
+/* 2. 下拉组合按钮 */
+.ink-btn-group {
+  display: inline-flex;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+
+  .ink-btn {
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+
+    &:first-child {
+      border-top-left-radius: 6px;
+      border-bottom-left-radius: 6px;
+      padding-right: 16px;
+      border-right: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    &:last-child {
+      border-top-right-radius: 6px;
+      border-bottom-right-radius: 6px;
+      padding-left: 12px;
+      padding-right: 12px;
+    }
+
+    &:hover {
+      z-index: 1;
+    }
+  }
+
+  &:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* 3. 侧边栏菜单项 */
+.ink-nav-item {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  color: var(--ink-sec);
+
+  /* 墨痕背景层 */
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--nav-hover-bg);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: -1;
+  }
+
+  /* 左侧激活指示条 */
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--nav-active-bar-color, var(--ink-accent));
+    transform: translateX(-100%);
+    /* opacity 兜底：Windows 分数级 DPI 缩放下，仅靠 translateX(-100%)+overflow 裁剪
+       会因取整漏出约 1px 残条，用 opacity:0 彻底隐藏未激活态 */
+    opacity: 0;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+  }
+
+  /* 激活状态 */
+  &.active {
+    background: var(--nav-active-bg);
+    color: var(--ink-main);
+    font-weight: 600;
+    padding-left: 13px;
+    /* 补偿border-left的宽度变化，保持内容对齐 */
+
+    &::after {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    i {
+      color: var(--ink-accent);
+      transform: scale(1.1);
+    }
+  }
+
+  /* 悬浮态 */
+  &:hover:not(.active) {
+    color: var(--ink-main);
+    padding-left: 20px;
+    /* 缩进效果 */
+
+    &::before {
+      transform: scaleX(1);
+    }
+
+    i {
+      transform: scale(1.15);
+      color: var(--ink-accent);
+    }
+  }
+
+  i {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* 4. 动画定义 */
+@keyframes snip {
+  0% {
+    transform: rotate(0);
+  }
+
+  25% {
+    transform: rotate(-15deg);
+  }
+
+  50% {
+    transform: rotate(0);
+  }
+
+  75% {
+    transform: rotate(-10deg);
+  }
+
+  100% {
+    transform: rotate(0);
+  }
+}
+
+/* 5. 弹窗相关样式 */
+
+/* 输入框样式 */
+.ink-input-underline {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--input-border);
+  padding: 6px 0;
+  width: 100%;
+  font-size: 14px;
+  color: var(--ink-main);
+  outline: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+
+  &::placeholder {
+    color: var(--ink-sec);
+    font-weight: normal;
+    opacity: 0.6;
+    font-size: 14px;
+  }
+
+  &:focus {
+    border-bottom-color: var(--input-focus-border);
+    border-bottom-width: 2px;
+    transform: translateY(-1px);
+  }
+}
+
+/* Tab 按钮 */
+.tab-btn {
+  position: relative;
+  opacity: 0.6;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding-bottom: 4px;
+  font-family: inherit;
+  font-size: inherit;
+  color: var(--ink-sec);
+
+  &:hover {
+    opacity: 0.9;
+    color: var(--ink-main);
+  }
+
+  &.active {
+    opacity: 1;
+    font-weight: bold;
+    color: var(--ink-main);
+
+    &::after {
+      width: 60%;
+    }
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--ink-accent);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(-50%);
+    border-radius: 2px;
+  }
+}
+
+
+/* 6. 下拉选择框样式 */
+.ink-select {
+  width: 100%;
+
+  /* 适配 Element Plus 2.5+ (.el-select__wrapper) 和旧版 (.el-input__wrapper) */
+  .el-select__wrapper,
+  .el-input__wrapper {
+    background-color: var(--input-bg) !important;
+    box-shadow: none !important;
+    border-radius: 4px;
+    border: 1px solid var(--input-border);
+    padding: 6px 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+
+    /* 留出箭头位置 */
+
+    &.is-focused,
+    &.is-focus {
+      background-color: var(--input-focus-bg) !important;
+      border-color: var(--input-focus-border) !important;
+      box-shadow: none !important;
+    }
+
+    &:hover {
+      border-color: var(--input-focus-border);
+      background-color: var(--input-focus-bg) !important;
+    }
+  }
+
+  /* 选中文字与输入框文字 */
+  .el-select__selected-item {
+    font-size: 14px;
+    color: var(--ink-main) !important;
+    font-weight: 500;
+    line-height: normal;
+  }
+
+  .el-input__inner {
+    font-size: 14px;
+    color: var(--ink-main) !important;
+    font-weight: 500;
+    line-height: normal;
+  }
+
+  /* 占位符颜色 */
+  .el-select__placeholder.is-transparent {
+    color: var(--ink-sec) !important;
+    font-size: 14px;
+    margin-left: 0;
+    opacity: 1;
+  }
+
+  .el-input__inner::placeholder {
+    color: var(--ink-sec) !important;
+    font-size: 14px;
+    margin-left: 0;
+    opacity: 1;
+  }
+
+  /* 图标颜色 */
+  .el-input__prefix,
+  .el-input__suffix,
+  .el-select__suffix,
+  .el-select__caret {
+    color: var(--ink-sec);
+    transition: color 0.3s;
+  }
+
+  &:hover .el-select__suffix,
+  &:hover .el-select__caret {
+    color: var(--ink-main);
+  }
+
+  /* 多选标签与字数统计统一跟随主题，避免暗夜模式出现白色块。 */
+  .el-tag {
+    border-color: var(--tag-border) !important;
+    color: var(--tag-color) !important;
+    background: var(--tag-bg) !important;
+  }
+
+  .el-tag__close {
+    color: var(--tag-color) !important;
+
+    &:hover {
+      color: var(--ink-main) !important;
+      background: var(--overlay-active) !important;
+    }
+  }
+
+  .el-input__count,
+  .el-input__count-inner {
+    color: var(--ink-sec) !important;
+    background: transparent !important;
+  }
+
+  &.is-disabled,
+  .el-input.is-disabled {
+    opacity: 1;
+
+    .el-select__wrapper,
+    .el-input__wrapper {
+      border-color: var(--input-border);
+      color: var(--ink-sec);
+      background: var(--input-bg) !important;
+      cursor: not-allowed;
+    }
+  }
+}
+
+/* 单选按钮组样式 */
+.ink-radio-group {
+  .el-radio-button__inner {
+    background: transparent;
+    border-color: var(--btn-outline-border);
+    color: var(--ink-sec);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+      color: var(--ink-accent);
+    }
+  }
+
+  .el-radio-button.is-active {
+    .el-radio-button__inner {
+      background-color: var(--selection-bg-color) !important;
+      border-color: var(--ink-accent) !important;
+      color: var(--ink-accent) !important;
+      box-shadow: -1px 0 0 0 var(--ink-accent) !important;
+    }
+  }
+
+  .el-radio-button:first-child.is-active .el-radio-button__inner {
+    box-shadow: none;
+  }
+}
+
+/* 下拉菜单样式 */
+.ink-select-popper {
+  &.el-popper {
+    background: var(--ui-glass-bg) !important;
+    border: 1px solid var(--ui-border) !important;
+    backdrop-filter: blur(12px);
+    box-shadow: var(--ui-shadow) !important;
+  }
+
+  .el-popper__arrow::before {
+    background: var(--ui-glass-bg) !important;
+    border: 1px solid var(--ui-border) !important;
+  }
+
+  .el-select-dropdown__item {
+    color: var(--ink-sec);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 4px;
+    margin: 2px 4px;
+
+    &.hover,
+    &:hover {
+      color: var(--ink-main);
+      background-color: var(--selection-bg-color);
+      // transform: translateX(2px);
+    }
+
+    &.is-selected {
+      color: var(--ink-accent);
+      font-weight: bold;
+      background-color: var(--selection-bg-color);
+    }
+
+    // 两行选项（模型名 + 卖点备注，如"效果极佳 · 昂贵"）需要自适应高度
+    &:has(.ew-option-2line) {
+      height: auto;
+      min-height: 34px;
+      padding-top: 5px;
+      padding-bottom: 5px;
+      line-height: 1.45;
+    }
+  }
+
+  .ew-option-2line {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+
+    .opt-desc {
+      font-size: 11px;
+      font-weight: 400;
+      opacity: 0.72;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+}
+
+/* 数字输入框：加减按钮与文字跟随主题变量，element-plus 浅色默认值在暗夜主题下会浮出灰色块 */
+.el-input-number {
+  .el-input-number__increase,
+  .el-input-number__decrease {
+    background: transparent;
+    color: var(--ink-sec);
+    border-color: var(--input-border);
+
+    &:hover {
+      color: var(--ink-accent);
+    }
+
+    &.is-disabled {
+      color: var(--ink-sec);
+      opacity: 0.4;
+    }
+  }
+
+  // element-plus 对 controls-right 布局用 border 简写覆盖上面的 border-color，需强制压制
+  &.is-controls-right .el-input-number__increase {
+    border-bottom: 1px solid var(--input-border) !important;
+  }
+
+  &.is-controls-right .el-input-number__decrease {
+    border-left: 1px solid var(--input-border) !important;
+  }
+
+  .el-input__inner {
+    color: var(--ink-main);
+  }
+}
+
+/* 7. 模态框操作按钮 */
+.ink-btn-cancel {
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid var(--btn-outline-border);
+  background: var(--btn-outline-bg);
+  color: var(--ink-sec);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+
+  &:hover {
+    border-color: var(--ink-main);
+    color: var(--ink-main);
+    background: var(--btn-outline-hover-bg);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.ink-btn-submit {
+  padding: 8px 24px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-color);
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+  }
+
+  &:hover {
+    background: var(--btn-primary-hover-bg);
+    color: var(--btn-primary-hover-color);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+
+    &::before {
+      left: 100%;
+    }
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+
+/* 8. 日期选择器样式 */
+.ink-date-picker {
+  width: 100%;
+
+  .el-input__wrapper {
+    background: var(--input-bg) !important;
+    border: 1px solid var(--input-border) !important;
+    box-shadow: none !important;
+
+    &:hover {
+      border-color: var(--ink-accent) !important;
+    }
+
+    &.is-focus {
+      border-color: var(--ink-accent) !important;
+      background: var(--input-focus-bg) !important;
+    }
+  }
+
+  .el-input__inner {
+    color: var(--ink-main) !important;
+  }
+}
+
+/* 日期选择器弹窗样式 */
+.ink-date-picker-popper {
+  &.el-popper {
+    background: var(--ui-glass-bg) !important;
+    border: 1px solid var(--ui-border) !important;
+    backdrop-filter: blur(12px);
+    box-shadow: var(--ui-shadow) !important;
+  }
+
+  /* 移除内部面板的默认背景，使其透明以显示毛玻璃效果 */
+  .el-picker-panel {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: var(--ink-main);
+  }
+
+  .el-popper__arrow::before {
+    background: var(--ui-glass-bg) !important;
+    border: 1px solid var(--ui-border) !important;
+  }
+
+  /* 头部区域 */
+  .el-date-picker__header {
+    margin: 12px;
+    border-bottom: none;
+  }
+
+  .el-date-picker__header-label {
+    color: var(--ink-main);
+    font-weight: 600;
+
+    &:hover {
+      color: var(--ink-accent);
+    }
+  }
+
+  .el-picker-panel__icon-btn {
+    color: var(--ink-sec);
+    margin-top: 0;
+
+    &:hover {
+      color: var(--ink-accent);
+    }
+  }
+
+  /* 日期表格 */
+  .el-date-table {
+    th {
+      color: var(--ink-sec);
+      border-bottom: 1px solid var(--ui-border);
+    }
+
+    td {
+
+      &.next-month,
+      &.prev-month {
+        color: var(--ink-sec);
+        opacity: 0.5;
+      }
+
+      &.available {
+        color: var(--ink-main);
+
+        &:hover {
+          color: var(--ink-accent);
+        }
+      }
+
+      &.current:not(.disabled) .el-date-table-cell__text {
+        background-color: var(--ink-accent);
+        color: #fff;
+      }
+
+      &.today {
+        .el-date-table-cell__text {
+          color: var(--ink-accent);
+          font-weight: bold;
+        }
+
+        &.current .el-date-table-cell__text {
+          color: #fff;
+        }
+      }
+    }
+  }
+}
+
+/* 9. 搜索输入框样式 */
+.ink-search-input {
+  width: 100%;
+
+  .el-input__wrapper {
+    background: var(--input-bg) !important;
+    border: 1px solid var(--input-border) !important;
+    border-right: none !important;
+    /* 连接处无边框 */
+    border-radius: 6px 0 0 6px !important;
+    box-shadow: none !important;
+    padding-left: 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+      border-color: var(--ink-accent) !important;
+      z-index: 1;
+    }
+
+    &.is-focus {
+      border-color: var(--ink-accent) !important;
+      background: var(--input-focus-bg) !important;
+      z-index: 1;
+    }
+  }
+
+  .el-input__inner {
+    color: var(--ink-main) !important;
+    height: 38px;
+    line-height: 38px;
+
+    &::placeholder {
+      color: var(--ink-sec);
+      opacity: 0.6;
+    }
+  }
+
+  .el-input-group__append {
+    background: var(--btn-primary-bg) !important;
+    border: 1px solid var(--btn-primary-bg) !important;
+    border-radius: 0 6px 6px 0 !important;
+    padding: 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+
+    .el-button {
+      border: none !important;
+      background: transparent !important;
+      color: var(--btn-primary-color) !important;
+      margin: 0;
+      padding: 0 20px;
+      height: 100%;
+      border-radius: 0;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
+        color: #fff !important;
+      }
+
+      i {
+        font-size: 16px;
+      }
+    }
+  }
+}
+
+/* 10. 数据表格样式 */
+.ink-table {
+  width: 100%;
+  background: transparent !important;
+  --el-table-border-color: var(--ui-border);
+  --el-table-header-bg-color: transparent;
+  --el-table-row-hover-bg-color: var(--ui-glass-bg-hover);
+
+  .el-table__inner-wrapper::before {
+    display: none;
+  }
+
+  /* 表头 */
+  .el-table__header-wrapper {
+    th {
+      background: var(--ui-glass-bg) !important;
+      color: var(--ink-sec);
+      font-weight: normal;
+      font-size: 13px;
+      border-bottom: 1px solid var(--ui-border) !important;
+      height: 48px;
+    }
+  }
+
+  /* 表体 */
+  .el-table__body-wrapper {
+    tr {
+      background: transparent !important;
+      cursor: pointer;
+      transition: background 0.2s;
+
+      &:hover {
+        background-color: var(--ui-glass-bg-hover) !important;
+
+        td {
+          background-color: transparent !important;
+        }
+      }
+
+      td {
+        // background: transparent !important;
+        border-bottom: 1px solid var(--ui-border) !important;
+        color: var(--ink-main);
+        font-size: 14px;
+        padding: 12px 0;
+      }
+    }
+  }
+
+  /* 排名图标 */
+  .medal-icon {
+    font-size: 18px;
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.1));
+
+    &.medal-1 {
+      color: #fbbf24;
+    }
+
+    &.medal-2 {
+      color: #9ca3af;
+    }
+
+    &.medal-3 {
+      color: #d97706;
+    }
+  }
+
+  .rank-number {
+    font-weight: bold;
+    font-size: 16px;
+    font-family: serif;
+    color: var(--ink-sec);
+  }
+
+  /* 链接文本 (作品名/作者名) */
+  .link-text {
+    font-weight: bold;
+    color: var(--ink-main);
+    cursor: pointer;
+    transition: color 0.2s;
+
+    &:hover {
+      color: var(--ink-accent);
+      text-decoration: underline;
+    }
+  }
+
+  /* 标签 */
+  .level-tag {
+    display: inline-block;
+    font-size: 12px;
+    background: var(--btn-outline-bg);
+    padding: 2px 6px;
+    border-radius: 3px;
+    color: var(--ink-sec);
+    border: 1px solid var(--btn-outline-border);
+  }
+
+  /* 数字字体 */
+  .mono-font {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+  }
+
+  /* 增长文本 */
+  .increase-text {
+    color: #059669;
+    font-weight: normal;
+  }
+
+  .no-data {
+    color: var(--ink-sec);
+    opacity: 0.5;
+  }
+
+  /* 操作按钮 */
+  .track-button {
+    border: 1px solid var(--ink-main);
+    color: var(--ink-main);
+    background: transparent;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      background: var(--ink-main);
+      color: var(--bg-main);
+    }
+  }
+
+  /* 固定列样式 */
+  .el-table__fixed-right {
+    background: var(--bg-main) !important;
+    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.08) !important;
+
+    &::before {
+      display: none;
+    }
+  }
+
+  .el-table__fixed-right-patch {
+    background: var(--bg-main) !important;
+  }
+
+  th.el-table-fixed-column--right,
+  td.el-table-fixed-column--right {
+    background: var(--bg-main) !important;
+  }
+
+  tr:hover {
+    td.el-table-fixed-column--right {
+      background: var(--ui-glass-bg-hover) !important;
+    }
+  }
+
+  .el-table__header-wrapper {
+    th.el-table-fixed-column--right {
+      background: var(--ui-glass-bg) !important;
+    }
+  }
+}
+
+/* 11. 分页样式 */
+.ink-pagination {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 14px;
+
+  .el-pagination {
+    --el-pagination-bg-color: transparent;
+    --el-pagination-button-bg-color: var(--ui-glass-bg);
+    --el-pagination-hover-color: var(--ink-main);
+    --el-pagination-font-size: 13px;
+
+    .el-pager li {
+      background: var(--ui-glass-bg) !important;
+      border: 1px solid var(--ui-border) !important;
+      color: var(--ink-sec);
+      border-radius: 4px;
+      margin: 0 4px;
+      min-width: 28px;
+      height: 28px;
+      line-height: 26px;
+      transition: all 0.2s;
+
+      &.is-active {
+        background: var(--ink-main) !important;
+        color: var(--bg-main) !important;
+        border-color: var(--ink-main) !important;
+        font-weight: bold;
+      }
+
+      &:hover:not(.is-active) {
+        color: var(--ink-main);
+        border-color: var(--ink-main) !important;
+      }
+    }
+
+    button {
+      background: var(--ui-glass-bg) !important;
+      border: 1px solid var(--ui-border) !important;
+      color: var(--ink-sec);
+      border-radius: 4px;
+      height: 28px;
+      min-width: 28px;
+
+      &:hover:not(:disabled) {
+        color: var(--ink-main);
+        border-color: var(--ink-main) !important;
+      }
+
+      &:disabled {
+        background: transparent !important;
+        opacity: 0.5;
+      }
+    }
+
+    .el-pagination__total,
+    .el-pagination__jump {
+      color: var(--ink-sec);
+    }
+  }
+}
+
+
+
+/* 12. 统一弹出层样式 */
+@mixin ink-popover-visuals {
+  /* 覆盖 Element Plus 变量 - 确保组件内部使用这些变量时能取到正确值 */
+  --el-bg-color-overlay: var(--ui-glass-bg-hover);
+  --el-border-color-light: var(--ui-border);
+  --el-text-color-regular: var(--ink-main);
+  --el-box-shadow-light: var(--ui-shadow);
+  --el-popover-bg-color: var(--ui-glass-bg-hover);
+  --el-popover-border-color: var(--ui-border);
+  --el-popover-title-text-color: var(--ink-main);
+  --el-popover-padding: 12px;
+  --el-popover-border-radius: 12px;
+
+  /* 强制样式 - 覆盖 Element Plus 可能的行内样式或高优先级样式 */
+  background: var(--ui-glass-bg-hover) !important;
+  border: 1px solid var(--ui-border) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: var(--ui-shadow) !important;
+  border-radius: 12px !important;
+  color: var(--ink-main) !important;
+}
+
+/* 导出通用弹出层类，供非 Element Plus 组件使用 (如 SmartPopover) */
+.ink-popover-panel {
+  @include ink-popover-visuals;
+  padding: 12px;
+  /* 默认内边距 */
+  position: relative;
+  z-index: 2000;
+}
+
+.el-popper {
+
+  &.el-popover,
+  &.el-dropdown__popper {
+    @include ink-popover-visuals;
+
+    /* 修复箭头样式 */
+    .el-popper__arrow::before {
+      background: var(--ui-glass-bg-hover) !important;
+      border-color: var(--ui-border) !important;
+    }
+
+    /* 针对 Dropdown menu 的特殊处理 */
+    .el-dropdown-menu {
+      background: transparent !important;
+      border: none !important;
+      padding: 6px 0;
+    }
+
+    .el-dropdown-menu__item {
+      color: var(--ink-sec);
+      border-radius: 6px;
+      margin: 0 4px;
+      line-height: 24px;
+      /* 稍微增加行高 */
+
+      &:hover,
+      &:focus {
+        background-color: rgba(28, 25, 23, 0.05);
+        color: var(--ink-main);
+      }
+
+      &.is-active {
+        color: var(--ink-accent);
+        background-color: rgba(180, 83, 9, 0.05);
+        font-weight: bold;
+      }
+
+      /* 分割线颜色 */
+      &.el-dropdown-menu__item--divided {
+        border-top-color: var(--ui-border);
+      }
+    }
+  }
+
+  /* 暗色模式下微调 */
+  .theme-dark & {
+
+    .el-dropdown-menu__item:hover,
+    .el-dropdown-menu__item:focus {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .el-dropdown-menu__item.is-active {
+      background-color: rgba(180, 83, 9, 0.2);
+    }
+  }
+}
+
+/* 特殊 Popover 修正 (保持布局但移除重复视觉样式) */
+.skin-popover.el-popover {
+  padding: 0 !important;
+  /* 皮肤弹窗无内边距 */
+  overflow: hidden;
+
+  .el-popover__title {
+    display: none;
+  }
+}
+
+.login-popover.el-popover {
+  padding: 24px !important;
+}
+
+.user-popover.el-popover {
+  padding: 12px !important;
+  min-width: 180px;
+}
+
+
+.ink-input {
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: var(--ink-main);
+  font-size: 14px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+  outline: none;
+  width: 100%;
+  height: 36px;
+  /* 统一高度 */
+
+  &::placeholder {
+    color: var(--ink-sec);
+    opacity: 1;
+  }
+
+  &:focus {
+    outline: none;
+    background: var(--input-focus-bg);
+    border-color: var(--input-focus-border);
+    box-shadow: 0 0 0 2px var(--selection-bg-color);
+    transform: translateY(-1px);
+  }
+
+  &:hover:not(:focus) {
+    border-color: var(--input-focus-border);
+  }
+
+  &:disabled {
+    border-color: var(--input-border);
+    color: var(--ink-sec);
+    background: var(--input-bg);
+    cursor: not-allowed;
+    opacity: 1;
+  }
+
+  /* 辅助类 */
+  &.flex-1 {
+    flex: 1;
+  }
+
+  &.full-width {
+    width: 100%;
+  }
+}
+
+/* 默认 input 标签应用标准样式 (保留以兼容旧代码，但推荐使用 .ink-input) */
+input[type="text"]:not(.ink-input-underline):not(.el-input__inner):not(.el-select__input),
+input[type="email"]:not(.ink-input-underline):not(.el-input__inner),
+input[type="password"]:not(.ink-input-underline):not(.el-input__inner),
+input[type="number"]:not(.ink-input-underline):not(.el-input__inner),
+textarea:not(.el-textarea__inner) {
+  @extend .ink-input;
+}
+
+textarea {
+  resize: vertical;
+  line-height: 1.6;
+  min-height: 80px;
+  height: auto;
+  /* 覆盖 .ink-input 的固定高度 */
+}
+
+/* 按钮统一动效 */
+button {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.ink-btn:disabled {
+  opacity: 1;
+}
+
+/* v-ink-loading 指令样式 */
+.ink-loading-parent--relative {
+  position: relative !important;
+}
+
+.ink-loading-mask {
+  position: absolute;
+  z-index: 2000;
+  background-color: rgba(255, 255, 255, 0.92);
+  /* 白底，微透 */
+  margin: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transition: opacity 0.3s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* 可选：增加一点纸张纹理质感 */
+  background-image: radial-gradient(#f3f3f3 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* ==============================================
+   NProgress 雅致风格 (Elegant Style)
+   适配：易创 UI
+   ============================================== */
+
+/* 1. 进度条主体 */
+#nprogress .bar {
+  /*
+     背景色：使用你页面中的“码字进度”同款渐变色
+     从浅铜色到深褐色，显得有质感且不单调
+  */
+  background: linear-gradient(to right, #dfba86, #b06935) !important;
+
+  /* 高度：保持纤细，精致感 */
+  height: 3px !important;
+
+  /* 圆角：符合你 UI 中大量的圆角设计 */
+  border-radius: 0 2px 2px 0;
+
+  /* 确保层级最高 */
+  z-index: 99999 !important;
+}
+
+/* 2. 进度条头部的“光晕” (Peg) */
+#nprogress .peg {
+  /* 清除默认阴影 */
+  box-shadow: none !important;
+
+  display: block;
+  position: absolute;
+  right: 0px;
+  width: 100px;
+  height: 100%;
+
+  /*
+     光晕效果：使用同色系的柔光
+     这会让进度条头部看起来像“墨迹未干”或者“金粉流动”
+  */
+  box-shadow:
+    0 0 10px #b06935,
+    0 0 5px #dfba86 !important;
+
+  opacity: 1.0;
+  transform: rotate(3deg) translate(0px, -4px);
+}
+
+/* 3. 隐藏默认的旋转圈圈 (保持界面整洁) */
+#nprogress .spinner {
+  display: none !important;
+}
+
+/* 4. 容器安全设置 */
+#nprogress {
+  pointer-events: none;
+}
+
+
+/* 自定义全屏 Loading 遮罩层 */
+.ink-full-screen-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 99999;
+  /* 确保层级最高 */
+
+  /* 背景色：推荐使用微透的白色，配合水墨风格更显雅致 */
+  background-color: rgba(255, 255, 255, 0.9);
+  /* 如果你是深色模式，可以用 rgba(0, 0, 0, 0.8) */
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  /* 禁止滚动 */
+  overflow: hidden;
+
+  /* 可选：添加淡入动画 */
+  animation: inkFadeIn 0.3s ease;
+}
+
+@keyframes inkFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}

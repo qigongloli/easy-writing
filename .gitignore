@@ -1,0 +1,44 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+src-tauri/target
+/tests/
+/release/
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Auto-generated
+src/auto-imports.d.ts
+src/components.d.ts
+
+# 本地环境变量永不入库（纯本地应用本不需要 env，防手滑）
+.env
+.env.*
+
+# Tauri 构建期自动重生成
+src-tauri/gen/schemas
+
+# 其他构建/缓存产物
+coverage
+*.tsbuildinfo
+.eslintcache
+stats.html

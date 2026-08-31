@@ -1,0 +1,214 @@
+/*
+ * 规则/作品面板共用的表单样式，视觉语言与 WorkflowSettingsPanel 一致：
+ * 分区 + 标题说明 + 圆角输入 + 底部粘性操作条。
+ */
+.rail-form-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  color: var(--ink-main);
+  background: transparent;
+}
+
+.rail-form-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.rail-form-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 260px;
+  padding: 32px 20px;
+  color: var(--ink-sec);
+  text-align: center;
+
+  i {
+    margin-bottom: 4px;
+    font-size: 26px;
+    opacity: 0.7;
+  }
+
+  strong {
+    color: var(--ink-main);
+    font-size: 14px;
+  }
+
+  span {
+    font-size: 12px;
+    line-height: 1.6;
+  }
+}
+
+.rail-form-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 30px;
+  margin: 12px 16px 0;
+  padding: 0 8px 0 10px;
+  border: 1px solid var(--state-warning-border);
+  border-radius: 7px;
+  color: var(--state-warning-on);
+  background: var(--state-warning-surface);
+  font-size: 12px;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+}
+
+.rail-form-icon-button {
+  width: 26px;
+  min-width: 26px;
+  height: 26px;
+  padding: 0;
+  color: inherit;
+}
+
+.rail-form-section {
+  padding: 18px 16px;
+  border-bottom: 1px solid var(--divider);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.rail-form-section-title {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 14px;
+
+  strong {
+    font-size: 14px;
+  }
+
+  span {
+    color: var(--ink-sec);
+    font-size: 11px;
+    line-height: 1.55;
+  }
+}
+
+.rail-form-grid {
+  :deep(.el-form-item) {
+    margin-bottom: 14px;
+  }
+
+  :deep(.el-form-item:last-child) {
+    margin-bottom: 0;
+  }
+
+  :deep(.el-form-item__label) {
+    height: auto;
+    margin-bottom: 6px;
+    padding: 0;
+    color: var(--ink-sec);
+    font-size: 12px;
+    line-height: 1.4;
+  }
+}
+
+.rail-form-inline {
+  :deep(.el-form-item) {
+    align-items: center;
+  }
+
+  :deep(.el-form-item__label) {
+    margin-bottom: 0;
+    padding-right: 10px;
+  }
+
+  :deep(.el-form-item__content) {
+    min-width: 0;
+  }
+}
+
+.rail-textarea-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.rail-textarea {
+  min-height: 88px;
+  padding-bottom: 28px;
+  resize: none;
+  line-height: 1.65;
+}
+
+.rail-textarea-count {
+  position: absolute;
+  right: 10px;
+  bottom: 7px;
+  color: var(--ink-sec);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.rail-resource-state {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 12px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  color: var(--ink-sec);
+  background: color-mix(in srgb, var(--ink-sec) 6%, transparent);
+  font-size: 12px;
+
+  &.is-error {
+    justify-content: space-between;
+    color: var(--state-danger-on);
+    background: var(--state-danger-surface);
+
+    span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+  }
+}
+
+.rail-form-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: grid;
+  flex-shrink: 0;
+  gap: 8px;
+  padding: 10px 16px 12px;
+  border-top: 1px solid var(--divider);
+  background: var(--panel-footer-bg);
+  backdrop-filter: blur(12px);
+}
+
+.rail-form-footer-hint {
+  margin: 0;
+  color: var(--ink-sec);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.rail-form-footer-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 10px;
+
+  .ink-btn {
+    width: 100%;
+    min-height: 36px;
+    margin: 0;
+  }
+}

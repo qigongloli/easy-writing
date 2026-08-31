@@ -1,0 +1,191 @@
+/* 角色关系画布样式（scoped，经 SFC style src 引入）。
+   画布交互基座（节点/端口/幽灵线/平移缩放）在 graph/graph-canvas.scss；
+   这里只放业务皮肤：工具栏、图例、五类线色（:deep 注入公共壳）、连线编辑器。
+   线色全走主题语义变量：亲情=金褐 / 爱情=朱红 / 友情=青绿 / 敌对=暗红虚线 / 其他=灰。 */
+
+.relation-canvas-shell {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.relation-stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+
+  &.fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    background: var(--bg-main);
+    padding: 12px;
+  }
+}
+
+.relation-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--ui-border);
+
+  .zoom-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--ink-sec);
+
+    button {
+      width: 22px;
+      height: 22px;
+      border: 1px solid var(--ui-border);
+      border-radius: 4px;
+      background: transparent;
+      color: var(--ink-main);
+      cursor: pointer;
+    }
+  }
+}
+
+// 图例与编辑器的分类色点共用一套（i 为色点）
+.relation-legend,
+.edge-editor-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--ink-sec);
+
+  span,
+  label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  i {
+    width: 10px;
+    height: 4px;
+    border-radius: 2px;
+    display: inline-block;
+  }
+
+  .legend-family i { background: var(--chart-ai); }
+  .legend-love i { background: var(--ink-accent); }
+  .legend-friend i { background: var(--state-success); }
+  .legend-enemy i {
+    background: repeating-linear-gradient(90deg, var(--state-danger) 0 3px, transparent 3px 5px);
+  }
+  .legend-other i { background: var(--ink-sec); }
+}
+
+.relation-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--ink-sec);
+
+  i { font-size: 28px; opacity: 0.7; }
+  p { font-size: 14px; margin: 0; }
+  span { font-size: 12px; }
+}
+
+.relation-empty-hint {
+  position: absolute;
+  inset: 0;
+  top: 46px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--ink-sec);
+  pointer-events: none;
+
+  i { font-size: 28px; opacity: 0.7; }
+  p { font-size: 14px; margin: 0; }
+  span { font-size: 12px; }
+}
+
+// 五类线色：注入公共画布壳（Vue Flow 的边类名）
+.relation-stage :deep(.vue-flow__edge) {
+  &.rel-family .vue-flow__edge-path { stroke: var(--chart-ai); }
+  &.rel-love .vue-flow__edge-path { stroke: var(--ink-accent); }
+  &.rel-friend .vue-flow__edge-path { stroke: var(--state-success); }
+  &.rel-enemy .vue-flow__edge-path { stroke: var(--state-danger); stroke-dasharray: 7 5; }
+  &.rel-other .vue-flow__edge-path { stroke: var(--ink-sec); }
+}
+
+// 节点卡内容（插槽在父作用域编译，普通 scoped 即可命中）
+.relation-card {
+  padding: 10px 12px;
+
+  h3 {
+    margin: 0 0 4px;
+    font-size: 14px;
+    color: var(--ink-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  span {
+    font-size: 11px;
+    color: var(--ink-sec);
+
+    &.role-0 { color: var(--ink-accent); }
+    &.role-2 { color: var(--state-danger); }
+  }
+}
+
+.edge-editor {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--ui-border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bg-main) 94%, var(--ui-glass-bg));
+  box-shadow: 0 12px 30px color-mix(in srgb, var(--ink-main) 16%, transparent);
+  z-index: 20;
+
+  .edge-editor-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    label {
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+
+      &.checked { border-color: var(--ink-accent); color: var(--ink-main); }
+      input { display: none; }
+    }
+
+    input[type='text'] {
+      width: 220px;
+      padding: 5px 8px;
+      border: 1px solid var(--ui-border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--ink-main);
+      font-size: 13px;
+    }
+
+    .danger { color: var(--state-danger); }
+  }
+}

@@ -1,0 +1,179 @@
+import type { AiModelGroupCode, AiModelOption } from '@/types/ai-model'
+import type { UserAiModelSavePayload } from '@/types/user-ai-model'
+import { createLocalEntityId, nowIso } from './local-library-utils'
+
+/**
+ * BYOK 模型本地库：替代旧服务端 /ai/user_model/* 数据通道。
+ *
+ * - 模型配置（含 API Key）只存本机 localStorage，永不上传；界面与文档同口径提示。
+ * - 列表函数返回的选项一律剥离 apiKey（明文密钥只经 getLocalAiModelSecret 交给请求层）。
+ * - 编辑保存时 apiKey 传空串 = 保留原密钥（与旧服务端"编辑不回显密钥"语义一致）。
+ * - 各场景默认模型偏好（原 /ai/model/preference）也归这里，一并本地化。
+ */
+
+export interface LocalAiModel {
+  id: number
+  name: string
+  scene: 'text' | 'image'
+  provider: string
+  protocol: 'openai_compatible'
+  modelCode: string
+  baseUrl: string
+  apiKey: string
+  maxContext: number
+  maxOutputTokens: number
+  status: number
+  sort: number
+  createTime: string
+}
+
+interface LocalAiModelStore {
+  version: 1
+  models: LocalAiModel[]
+  /** 各分组默认模型（值为模型 code，即 String(id)） */
+  preferences: Partial<Record<AiModelGroupCode, string>>
+}
+
+const STORAGE_KEY = 'ew-local-ai-models'
+
+const emptyStore = (): LocalAiModelStore => ({ version: 1, models: [], preferences: {} })
+
+const loadStore = (): LocalAiModelStore => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '')
+    if (!parsed || parsed.version !== 1 || !Array.isArray(parsed.models)) return emptyStore()
+    return {
+      version: 1,
+      models: parsed.models.filter((item: LocalAiModel) => item && typeof item.id === 'number'),
+      preferences: parsed.preferences && typeof parsed.preferences === 'object' ? parsed.preferences : {},
+    }
+  } catch {
+    return emptyStore()
+  }
+}
+
+const saveStore = (store: LocalAiModelStore) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(store))
+  } catch (error) {
+    console.warn('写入本地模型库失败', error)
+  }
+}
+
+/** 模型的对外唯一码：列表/偏好/请求层都用它指认模型 */
+export const localAiModelCode = (id: number) => String(id)
+
+/** 转成界面消费的选项形状；apiKey 在此剥离 */
+const toOption = (model: LocalAiModel): AiModelOption => ({
+  id: model.id,
+  name: model.name,
+  code: localAiModelCode(model.id),
+  modelCode: model.modelCode,
+  scene: model.scene,
+  provider: model.provider,
+  protocol: model.protocol,
+  baseUrl: model.baseUrl,
+  ownerType: 'user',
+  isMine: true,
+  vipLocked: false,
+  maxContext: model.maxContext,
+  maxOutputTokens: model.maxOutputTokens,
+  status: model.status,
+})
+
+const sortModels = (models: LocalAiModel[]) =>
+  [...models].sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0) || a.id - b.id)
+
+export const listLocalAiModels = async (params?: { scene?: string }) => {
+  const store = loadStore()
+  const scene = String(params?.scene || '').trim()
+  const models = sortModels(store.models).filter(model => !scene || model.scene === scene)
+  return { data: models.map(toOption) }
+}
+
+export const saveLocalAiModel = async (payload: UserAiModelSavePayload) => {
+  const store = loadStore()
+  if (payload.id != null) {
+    const model = store.models.find(item => item.id === payload.id)
+    if (!model) throw new Error('模型不存在')
+    model.name = payload.name
+    model.scene = payload.scene
+    model.provider = payload.provider
+    model.modelCode = payload.modelCode
+    model.baseUrl = payload.baseUrl
+    // 编辑时密钥留空 = 沿用原密钥
+    if (String(payload.apiKey || '').trim()) model.apiKey = String(payload.apiKey).trim()
+    model.maxContext = payload.maxContext
+    model.maxOutputTokens = payload.maxOutputTokens
+    model.status = payload.status
+    if (payload.sort != null) model.sort = payload.sort
+    saveStore(store)
+    return { data: toOption(model) }
+  }
+  const model: LocalAiModel = {
+    id: createLocalEntityId(),
+    name: payload.name,
+    scene: payload.scene,
+    provider: payload.provider,
+    protocol: 'openai_compatible',
+    modelCode: payload.modelCode,
+    baseUrl: payload.baseUrl,
+    apiKey: String(payload.apiKey || '').trim(),
+    maxContext: payload.maxContext,
+    maxOutputTokens: payload.maxOutputTokens,
+    status: payload.status,
+    sort: payload.sort ?? store.models.length + 1,
+    createTime: nowIso(),
+  }
+  store.models.push(model)
+  saveStore(store)
+  return { data: toOption(model) }
+}
+
+export const setLocalAiModelStatus = async (id: number, status: number) => {
+  const store = loadStore()
+  const model = store.models.find(item => item.id === id)
+  if (!model) throw new Error('模型不存在')
+  model.status = status
+  saveStore(store)
+  return { data: toOption(model) }
+}
+
+export const deleteLocalAiModel = async (id: number) => {
+  const store = loadStore()
+  store.models = store.models.filter(item => item.id !== id)
+  // 偏好里指着被删模型的项一并清掉
+  for (const key of Object.keys(store.preferences) as AiModelGroupCode[]) {
+    if (store.preferences[key] === localAiModelCode(id)) delete store.preferences[key]
+  }
+  saveStore(store)
+  return { data: true }
+}
+
+/** 请求层取完整配置（含明文密钥）；code 即 localAiModelCode */
+export const getLocalAiModelSecret = (code: string): LocalAiModel | null => {
+  const store = loadStore()
+  return store.models.find(model => localAiModelCode(model.id) === String(code)) || null
+}
+
+// ---------------------------------------------------------------------------
+// 各场景默认模型偏好（原 /ai/model/preference）
+// ---------------------------------------------------------------------------
+
+/** 分组与模型场景的对应：文本模型供文本辅助与工作流，生图模型供封面 */
+export const sceneOfGroup = (groupCode: AiModelGroupCode): 'text' | 'image' =>
+  groupCode === 'image_generation' ? 'image' : 'text'
+
+export const getLocalAiPreference = (groupCode: AiModelGroupCode): string => {
+  return loadStore().preferences[groupCode] || ''
+}
+
+export const saveLocalAiPreference = (groupCode: AiModelGroupCode, modelCode: string) => {
+  const store = loadStore()
+  if (String(modelCode || '').trim()) {
+    store.preferences[groupCode] = String(modelCode).trim()
+  } else {
+    delete store.preferences[groupCode]
+  }
+  saveStore(store)
+}

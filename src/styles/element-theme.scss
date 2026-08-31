@@ -1,0 +1,55 @@
+// Element Plus 主题定制 - 水墨风格
+@forward 'element-plus/theme-chalk/src/common/var.scss' with (
+  $colors: (
+    'primary': (
+      'base': #1c1917,
+    ),
+    'success': (
+      'base': #16a34a,
+    ),
+    'warning': (
+      'base': #b45309,
+    ),
+    'danger': (
+      'base': #dc2626,
+    ),
+    'error': (
+      'base': #dc2626,
+    ),
+    'info': (
+      'base': #57534e,
+    ),
+  ),
+  $text-color: (
+    'primary': #1c1917,
+    'regular': #57534e,
+    'secondary': #78716c,
+    'placeholder': #a8a29e,
+  ),
+  $border-color: (
+    'base': rgba(28, 25, 23, 0.1),
+    'light': rgba(28, 25, 23, 0.05),
+    'lighter': rgba(28, 25, 23, 0.03),
+    'extra-light': rgba(28, 25, 23, 0.02),
+  ),
+  $fill-color: (
+    'base': rgba(255, 255, 255, 0.5),
+    'light': rgba(255, 255, 255, 0.4),
+    'lighter': rgba(255, 255, 255, 0.3),
+    'extra-light': rgba(255, 255, 255, 0.2),
+  ),
+  $bg-color: (
+    'base': #fafaf9,
+    'page': #fafaf9,
+    'overlay': rgba(255, 255, 255, 0.9),
+  ),
+  $border-radius: (
+    'base': 8px,
+    'small': 6px,
+    'round': 20px,
+    'circle': 100%,
+  ),
+  $font-family: (
+    'base': '"Noto Serif SC", "Songti SC", SimSun, serif',
+  )
+);

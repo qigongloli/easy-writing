@@ -1,0 +1,40 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "主窗口权限：本地书库 SQLite、备份对话框、更新器、创建写作面板窗口",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:default",
+    "core:window:allow-create",
+    "core:window:allow-destroy",
+    "core:window:allow-close",
+    "core:window:allow-is-fullscreen",
+    "core:window:allow-is-maximized",
+    "core:window:allow-minimize",
+    "core:window:allow-set-focus",
+    "core:window:allow-set-fullscreen",
+    "core:window:allow-show",
+    "core:window:allow-start-dragging",
+    "core:window:allow-start-resize-dragging",
+    "core:window:allow-toggle-maximize",
+    "core:webview:allow-create-webview-window",
+    "core:webview:allow-webview-show",
+    "dialog:default",
+    "sql:default",
+    "sql:allow-execute",
+    "updater:default",
+    {
+      "identifier": "http:default",
+      "allow": [
+        {
+          "url": "https://**"
+        },
+        {
+          "url": "http://**"
+        }
+      ]
+    }
+  ]
+}

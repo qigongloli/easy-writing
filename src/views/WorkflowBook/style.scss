@@ -1,0 +1,4170 @@
+.workflow-book-page {
+  --workflow-accent: var(--ink-accent);
+  --workflow-on-accent: var(--on-inverse);
+  --workflow-ink: var(--ink-main);
+  --workflow-muted: var(--ink-sec);
+  --workflow-line: var(--ui-border);
+  --workflow-soft-line: var(--divider);
+  --workflow-surface: var(--card-bg);
+  --workflow-surface-strong: var(--card-bg-hover);
+  --workflow-subtle: var(--surface-2);
+  --workflow-field: var(--input-bg);
+  --workflow-field-focus: var(--input-focus-bg);
+  --workflow-outline: var(--input-border);
+  --workflow-outline-focus: var(--input-focus-border);
+  --workflow-shadow: var(--card-shadow);
+  --workflow-shadow-strong: var(--card-shadow-hover);
+  --workflow-template-mask: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--bg-main) 94%, transparent) 0%,
+    color-mix(in srgb, var(--bg-main) 78%, transparent) 52%,
+    color-mix(in srgb, var(--bg-main) 18%, transparent) 100%
+  );
+  position: relative;
+  container-type: inline-size;
+  max-width: 100%;
+  height: 100%;
+  min-height: 0;
+  margin-top: 0;
+  padding: 8px 0 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--workflow-ink);
+}
+
+// 以下样式全部收敛到 .workflow-book-page 作用域内，避免通用类名泄漏影响其它页面。
+.workflow-book-page {
+
+.workflow-book-top-actions {
+  position: absolute;
+  top: 18px;
+  right: 14px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+
+// 恢复提示条出现时，顶部动作区回到文档流并与提示条同排（与 ≤1040 容器断点同一套做法）。
+// 保持绝对定位会让「历史记录」压在提示条的「新建工作流」上。
+// 同时收回步骤条为浮动按钮预留的右内边距，避免右侧留出一块空白。
+&.workflow-book-page--restoring {
+  .workflow-book-top-actions {
+    position: static;
+    gap: 12px;
+    margin-bottom: 14px;
+    pointer-events: auto;
+  }
+
+  // 只在「历史记录」原本浮在步骤条上的宽度区间收回预留位；
+  // ≤1040 时它本来就在文档流里，步骤条也已改用对称内边距。
+  @container (min-width: 1041px) {
+    .workflow-book-steps {
+      padding-right: 24px;
+    }
+  }
+}
+
+.workflow-history-link {
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  border: 1px solid color-mix(in srgb, var(--workflow-accent) 34%, var(--workflow-line));
+  border-radius: 8px;
+  background: var(--workflow-surface);
+  color: var(--workflow-ink);
+  box-shadow: var(--workflow-shadow);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  pointer-events: auto;
+
+  &:hover {
+    border-color: var(--workflow-accent);
+    color: var(--workflow-accent);
+    box-shadow: var(--workflow-shadow-strong);
+  }
+}
+
+// 无感恢复上次未完成流程后的提示条：说明「你看到的不是新建页」，并给出退出通道。
+// 作为顶部动作区的弹性项，与「历史记录」按钮同排，右侧不再被浮动按钮压住。
+.workflow-restore-bar {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--workflow-accent) 30%, var(--workflow-line));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--workflow-accent) 6%, var(--workflow-surface));
+  color: var(--workflow-ink);
+  font-size: 13px;
+
+  > i {
+    flex: 0 0 auto;
+    color: var(--workflow-accent);
+  }
+
+  p {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  button {
+    flex: 0 0 auto;
+    height: 30px;
+    padding: 0 12px;
+    border: 1px solid color-mix(in srgb, var(--workflow-accent) 40%, var(--workflow-line));
+    border-radius: 6px;
+    background: var(--workflow-surface);
+    color: var(--workflow-accent);
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      box-shadow: var(--workflow-shadow);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+  }
+}
+
+.workflow-restore-bar__close {
+  width: 30px;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+  color: var(--workflow-muted);
+
+  &:hover:not(:disabled) {
+    color: var(--workflow-ink);
+  }
+}
+
+.workflow-book-shell {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.workflow-book-steps {
+  min-width: 0;
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow: visible;
+  padding: 12px 148px 12px 20px;
+  border: 1px solid var(--workflow-line);
+  border-radius: 12px;
+  background: var(--workflow-surface);
+  box-shadow: var(--workflow-shadow);
+  backdrop-filter: blur(10px);
+}
+
+.workflow-book-step {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  min-width: 0;
+  gap: 12px;
+  border: 0;
+  color: var(--workflow-muted);
+  background: transparent;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+
+  &.active {
+    color: var(--workflow-accent);
+
+    .workflow-book-step__index {
+      color: var(--workflow-on-accent);
+      background: var(--workflow-accent);
+      box-shadow: 0 7px 16px color-mix(in srgb, var(--workflow-accent) 28%, transparent);
+    }
+  }
+
+  &.done {
+    color: var(--workflow-ink);
+
+    .workflow-book-step__index {
+      color: var(--workflow-muted);
+      background: var(--workflow-subtle);
+    }
+  }
+}
+
+.workflow-book-step__index {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  flex: 0 0 32px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--workflow-subtle);
+  color: var(--workflow-muted);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.workflow-book-step__copy {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+
+  strong,
+  small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    font-size: 14px;
+    line-height: 1.2;
+  }
+
+  small {
+    color: var(--workflow-muted);
+    font-size: 12px;
+    line-height: 1.2;
+  }
+}
+
+// 连接线撑满步骤间的空隙（把步骤推到全宽），但虚线只画居中的一小段
+.workflow-book-step-line {
+  flex: 1 1 auto;
+  min-width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &::before {
+    content: '';
+    width: 72px;
+    max-width: 100%;
+    height: 0;
+    border-top: 2px dashed color-mix(in srgb, var(--workflow-muted) 62%, transparent);
+  }
+}
+
+// 主体内容区独立滚动，页面整体不出现全局滚动条；macOS 下滚动条仅滚动时浮现
+.workflow-book-main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.workflow-first-step {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  // 主编辑区占满模板横条以外的剩余高度，模板始终保持单行。
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.workflow-first-step__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(300px, 0.9fr);
+  gap: 16px;
+  // 面板按内容高度排布：视口变高时不再把左侧灵感输入拉长，避免面板底部出现大片空白。
+  align-items: start;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+
+  // 内容高于可用空间时由面板自身滚动，不被上面的 overflow: hidden 裁掉。
+  > * {
+    max-height: 100%;
+  }
+
+  &.is-original-mode {
+    grid-template-columns: minmax(0, 1.48fr) minmax(340px, 0.95fr);
+    gap: 20px;
+  }
+}
+
+.workflow-side-stack {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  align-content: start;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.design-panel {
+  min-width: 0;
+  border: 1px solid var(--workflow-soft-line);
+  border-radius: 10px;
+  background: var(--workflow-surface);
+  box-shadow: var(--workflow-shadow);
+  backdrop-filter: blur(10px);
+}
+
+.design-panel__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--workflow-ink);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.2;
+
+  i {
+    color: var(--workflow-accent);
+  }
+
+  &.between {
+    justify-content: space-between;
+    gap: 16px;
+
+    button {
+      border: 0;
+      color: var(--workflow-muted);
+      background: transparent;
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+    }
+  }
+}
+
+.creative-direction-panel {
+  display: grid;
+  gap: 12px;
+  padding: 16px 20px;
+}
+
+.creative-direction-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.creative-direction-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--workflow-accent);
+  font-size: 12px;
+  line-height: 1.3;
+
+  &.ready {
+    color: var(--el-color-success);
+  }
+}
+
+.creative-direction-grid {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.9fr) minmax(120px, 0.72fr) minmax(150px, 0.95fr) minmax(220px, 1.35fr) minmax(200px, 1.2fr);
+  gap: 14px;
+  align-items: end;
+}
+
+.direction-control {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+
+  > span:first-child {
+    color: var(--workflow-ink);
+    font-size: 12px;
+    line-height: 1.2;
+  }
+
+  em {
+    color: var(--el-color-danger);
+    font-style: normal;
+  }
+
+  .model-chip-select,
+  .el-select {
+    width: 100%;
+  }
+}
+
+.inspiration-panel {
+  padding: 20px 22px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.original-inspiration-panel {
+  padding: 22px 24px 20px;
+}
+
+.original-inspiration-subtitle {
+  margin: 8px 0 0;
+  color: var(--workflow-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.original-idea-editor {
+  position: relative;
+  margin-top: 14px;
+
+  textarea {
+    width: 100%;
+    min-height: 176px;
+    padding: 16px 18px 42px;
+    border: 1px solid var(--workflow-outline);
+    border-radius: 8px;
+    background: var(--workflow-surface);
+    color: var(--workflow-ink);
+    font: inherit;
+    line-height: 1.55;
+    outline: none;
+    resize: none;
+
+    &::placeholder {
+      color: color-mix(in srgb, var(--workflow-muted) 72%, transparent);
+    }
+
+    &:focus {
+      border-color: var(--workflow-outline-focus);
+      background: var(--workflow-field-focus);
+    }
+  }
+
+  em {
+    position: absolute;
+    right: 14px;
+    bottom: 10px;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--workflow-surface) 88%, transparent);
+    color: color-mix(in srgb, var(--workflow-muted) 78%, transparent);
+    font-size: 12px;
+    font-style: normal;
+    line-height: 1.3;
+    pointer-events: none;
+  }
+}
+
+.idea-assist-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--workflow-accent) 5%, var(--workflow-surface));
+}
+
+.idea-assist-bar__hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--workflow-muted);
+  font-size: 13px;
+  line-height: 1.4;
+
+  i {
+    color: var(--workflow-accent);
+  }
+}
+
+.idea-assist-bar__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.workflow-step-error {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--el-color-danger) 30%, var(--workflow-line));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--el-color-danger) 7%, var(--workflow-surface));
+  color: var(--workflow-ink);
+}
+
+.workflow-step-error__icon {
+  padding-top: 2px;
+  color: var(--el-color-danger);
+}
+
+.workflow-step-error__body {
+  min-width: 0;
+
+  p {
+    margin: 6px 0 10px;
+    color: var(--workflow-muted);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  dl {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    margin: 0;
+    font-size: 12px;
+  }
+
+  dl div {
+    display: inline-flex;
+    gap: 6px;
+  }
+
+  dt {
+    color: var(--workflow-muted);
+  }
+
+  dd {
+    margin: 0;
+  }
+}
+
+.workflow-step-error__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  button {
+    border: 0;
+    background: transparent;
+    color: var(--workflow-muted);
+    cursor: pointer;
+  }
+}
+
+.workflow-step-error__reference {
+  user-select: text;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.workflow-step-error__retry {
+  margin-top: 10px;
+  padding: 6px 12px;
+  border: 1px solid var(--btn-outline-border);
+  border-radius: 6px;
+  background: var(--btn-outline-bg);
+  color: var(--workflow-ink);
+  cursor: pointer;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+.idea-assist-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 16px;
+  border: 1px solid var(--btn-outline-border);
+  border-radius: 6px;
+  background: var(--btn-outline-bg);
+  color: var(--workflow-ink);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+
+  i {
+    color: var(--workflow-accent);
+  }
+
+  &:hover:not(:disabled) {
+    border-color: var(--workflow-accent);
+    background: var(--btn-outline-hover-bg);
+  }
+
+  &:disabled {
+    color: var(--workflow-muted);
+    cursor: not-allowed;
+    opacity: 0.6;
+
+    i {
+      color: var(--workflow-muted);
+    }
+  }
+}
+
+.original-directions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+
+  .base-choice-chip {
+    flex: 0 0 auto;
+    min-width: 82px;
+    padding: 0 14px;
+  }
+
+  .base-custom-chip {
+    flex: 0 0 auto;
+    min-width: 82px;
+  }
+
+  .base-choice-input {
+    flex: 0 0 92px;
+    width: 92px;
+    min-width: 92px;
+  }
+}
+
+.idea-direction-chip {
+  min-width: 82px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 14px;
+  border: 1px solid var(--btn-outline-border);
+  border-radius: 6px;
+  background: var(--btn-outline-bg);
+  color: var(--workflow-muted);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transform: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease;
+
+  &:hover,
+  &:active,
+  &:focus-visible {
+    transform: none;
+  }
+
+  &.selected {
+    border-color: color-mix(in srgb, var(--workflow-accent) 38%, var(--workflow-line));
+    color: var(--workflow-accent);
+    background: color-mix(in srgb, var(--workflow-accent) 8%, transparent);
+  }
+}
+
+.original-directions button.idea-direction-chip:hover:not(:disabled),
+.original-directions button.idea-direction-chip:active:not(:disabled) {
+  transform: none;
+}
+
+.original-side-panel {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  padding: 22px 22px 14px;
+}
+
+.original-assist-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  flex: 1;
+  gap: 8px;
+  margin-top: 14px;
+
+  button {
+    min-width: 0;
+    min-height: 64px;
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border: 1px solid var(--workflow-soft-line);
+    border-radius: 8px;
+    background: var(--workflow-field);
+    color: var(--workflow-ink);
+    text-align: left;
+    font-family: inherit;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      border-color: color-mix(in srgb, var(--workflow-accent) 28%, var(--workflow-line));
+      background: var(--workflow-surface-strong);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.62;
+    }
+  }
+
+  i {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    color: var(--workflow-accent);
+    font-size: 17px;
+  }
+
+  span {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  strong,
+  small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    font-size: 14px;
+    line-height: 1.2;
+  }
+
+  small {
+    color: var(--workflow-muted);
+    font-size: 12px;
+  }
+}
+
+
+
+
+
+
+
+/* 预览浮层脱离文档流，避免 AI 结果撑开或挤压右侧布局。 */
+.idea-preview-popover {
+  position: absolute;
+  top: 64px;
+  right: 16px;
+  left: 16px;
+  z-index: 8;
+  max-height: calc(100% - 84px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--workflow-accent) 24%, var(--workflow-line));
+  border-radius: 8px;
+  background: var(--workflow-surface-strong);
+  box-shadow: 0 18px 42px rgba(91, 45, 15, 0.16);
+
+  p {
+    margin: 0;
+    max-height: 168px;
+    overflow-y: auto;
+    color: var(--workflow-ink);
+    font-size: 13px;
+    line-height: 1.7;
+  }
+}
+
+.idea-preview-popover__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  strong {
+    font-size: 14px;
+  }
+
+  button {
+    width: 28px;
+    height: 28px;
+    display: inline-grid;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--workflow-muted);
+    cursor: pointer;
+
+    &:hover {
+      background: color-mix(in srgb, var(--workflow-accent) 8%, transparent);
+      color: var(--workflow-accent);
+    }
+  }
+}
+
+.idea-preview-popover__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+
+  button {
+    min-width: 64px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid var(--workflow-soft-line);
+    border-radius: 6px;
+    background: var(--workflow-field);
+    color: var(--workflow-muted);
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.62;
+    }
+
+    &.primary {
+      border-color: var(--workflow-accent);
+      background: var(--workflow-accent);
+      color: #fff;
+    }
+  }
+}
+
+.target-title {
+  width: 100%;
+  color: var(--workflow-ink);
+  font-weight: 700;
+  line-height: 1.2;
+
+  span {
+    color: var(--workflow-muted);
+    font-size: 12px;
+    font-weight: 400;
+  }
+}
+
+.workflow-base-step {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(340px, 0.82fr);
+  align-items: stretch;
+  gap: 18px;
+  min-width: 0;
+  // 内容区填满固定高度、自身不滚，左右两栏各自独立滚动
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.base-config-panel,
+
+.base-config-panel {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.writing-parameters-panel {
+  display: grid;
+  align-content: start;
+  gap: 24px;
+}
+
+.writing-parameter-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.writing-focus-control {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+
+  textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 14px 16px;
+    border: 1px solid var(--workflow-outline);
+    border-radius: 8px;
+    background: var(--workflow-field);
+    color: var(--workflow-ink);
+    font: inherit;
+    font-size: 13px;
+    line-height: 1.65;
+    outline: none;
+    resize: vertical;
+
+    &:focus {
+      border-color: var(--workflow-outline-focus);
+      background: var(--workflow-field-focus);
+    }
+  }
+}
+
+.writing-focus-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+
+  strong {
+    color: var(--workflow-ink);
+    font-size: 15px;
+  }
+
+  em {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--el-color-success);
+    font-size: 12px;
+    font-style: normal;
+  }
+}
+
+.writing-parameter-hint {
+  margin: -8px 0 0;
+  color: var(--workflow-muted);
+  font-size: 12px;
+}
+
+.base-config-panel h2 {
+  margin: 0 0 16px;
+  color: var(--workflow-ink);
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+.base-config-section {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+
+  &:first-of-type {
+    margin-top: 0;
+  }
+}
+
+.base-config-section__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: var(--workflow-ink);
+  font-size: 15px;
+  line-height: 1.2;
+
+  span {
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    flex: 0 0 22px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--workflow-subtle);
+    color: var(--workflow-muted);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  strong {
+    font-size: 15px;
+  }
+
+  em {
+    color: var(--workflow-muted);
+    font-size: 12px;
+    font-style: normal;
+  }
+}
+
+.base-platform-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.base-platform-card {
+  position: relative;
+  min-width: 0;
+  min-height: 70px;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--workflow-soft-line);
+  border-radius: 8px;
+  background: var(--workflow-field);
+  color: var(--workflow-ink);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transform: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+
+  &:hover,
+  &:focus-visible {
+    border-color: color-mix(in srgb, var(--workflow-accent) 34%, var(--workflow-line));
+    box-shadow: 0 8px 18px color-mix(in srgb, var(--workflow-accent) 10%, transparent);
+    transform: none;
+  }
+
+  &.selected {
+    border-color: color-mix(in srgb, var(--workflow-accent) 62%, var(--workflow-line));
+    color: var(--workflow-accent);
+    background: color-mix(in srgb, var(--workflow-accent) 6%, var(--workflow-field));
+  }
+}
+
+.base-platform-card__icon {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--workflow-surface) 92%, transparent);
+  overflow: hidden;
+
+  img {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+  }
+}
+
+/* 图标破图兜底：显示平台名首字 */
+.base-platform-card__icon-fallback {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--workflow-accent) 14%, transparent);
+  color: var(--workflow-accent);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.base-platform-card__copy {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+
+  strong,
+  small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    font-size: 14px;
+    line-height: 1.2;
+  }
+
+  small {
+    color: var(--workflow-muted);
+    font-size: 12px;
+    line-height: 1.2;
+  }
+}
+
+.base-card-check {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--workflow-accent);
+  color: var(--workflow-on-accent);
+  font-size: 10px;
+  line-height: 1;
+}
+
+.base-chip-grid {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.base-choice-chip {
+  min-width: 0;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--btn-outline-border);
+  border-radius: 6px;
+  background: var(--btn-outline-bg);
+  color: var(--workflow-muted);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transform: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+
+  &:hover,
+  &:focus-visible {
+    border-color: color-mix(in srgb, var(--workflow-accent) 34%, var(--workflow-line));
+    box-shadow: 0 6px 14px color-mix(in srgb, var(--workflow-accent) 8%, transparent);
+    transform: none;
+  }
+
+  &.selected {
+    border-color: color-mix(in srgb, var(--workflow-accent) 48%, var(--workflow-line));
+    color: var(--workflow-accent);
+    background: color-mix(in srgb, var(--workflow-accent) 7%, transparent);
+    font-weight: 700;
+  }
+}
+
+.base-choice-chip--add {
+  gap: 6px;
+  color: var(--workflow-accent);
+}
+
+.base-custom-chip {
+  position: relative;
+  min-width: 0;
+  height: 36px;
+
+  &:hover,
+  &:focus-within {
+    .base-custom-delete {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+  }
+}
+
+.base-choice-chip--custom {
+  width: 100%;
+  padding-right: 30px;
+}
+
+.base-custom-delete {
+  position: absolute;
+  top: 50%;
+  right: 7px;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--workflow-muted);
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1;
+  opacity: 0;
+  outline: none;
+  pointer-events: none;
+  transform: translateY(-50%);
+  transition: opacity 0.16s ease, color 0.16s ease, visibility 0.16s ease;
+  visibility: hidden;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--workflow-accent);
+    transform: translateY(-50%);
+  }
+}
+
+.base-choice-input {
+  min-width: 0;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--workflow-outline);
+  border-radius: 6px;
+  background: var(--workflow-field);
+  color: var(--workflow-ink);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+
+  &::placeholder {
+    color: color-mix(in srgb, var(--workflow-muted) 70%, transparent);
+  }
+
+  &:focus {
+    border-color: var(--workflow-outline-focus);
+    background: var(--workflow-field-focus);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--workflow-accent) 10%, transparent);
+  }
+}
+
+.base-select-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.base-select-control,
+.model-select-control {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+
+  > span:first-child {
+    color: var(--workflow-ink);
+    font-size: 13px;
+    line-height: 1.2;
+  }
+
+  em {
+    color: var(--workflow-muted);
+    font-style: normal;
+  }
+}
+
+.workflow-config-select.ink-select {
+  .el-select__wrapper {
+    min-height: 38px;
+    border-radius: 6px;
+    padding: 5px 12px;
+  }
+
+  .el-select__selected-item,
+  .el-input__inner {
+    font-size: 13px;
+  }
+}
+
+.workflow-base-side {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  align-content: start;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.creative-direction-summary {
+  display: grid;
+  gap: 14px;
+  padding: 18px 20px;
+
+  dl {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+  }
+
+  dl > div {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    min-height: 34px;
+    padding: 7px 10px;
+    border: 1px solid var(--workflow-soft-line);
+    border-radius: 6px;
+    background: var(--workflow-field);
+  }
+
+  dt,
+  dd {
+    min-width: 0;
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  dt {
+    color: var(--workflow-muted);
+  }
+
+  dd {
+    overflow: hidden;
+    color: var(--workflow-ink);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.model-select-control {
+  margin-top: -2px;
+}
+
+.skill-tab-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-bottom: 1px solid var(--workflow-soft-line);
+
+  button {
+    position: relative;
+    min-width: 0;
+    height: 38px;
+    border: 0;
+    background: transparent;
+    color: var(--workflow-muted);
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    transform: none;
+
+    &::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      bottom: -1px;
+      left: 0;
+      height: 2px;
+      background: transparent;
+    }
+
+    &:hover {
+      color: var(--workflow-accent);
+      transform: none;
+    }
+
+    &.active {
+      color: var(--workflow-accent);
+      font-weight: 700;
+
+      &::after {
+        background: var(--workflow-accent);
+      }
+    }
+  }
+}
+
+.skill-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.skill-card {
+  position: relative;
+  min-width: 0;
+  min-height: 74px;
+  display: grid;
+  gap: 7px;
+  align-content: start;
+  padding: 13px 14px;
+  border: 1px solid var(--workflow-soft-line);
+  border-radius: 8px;
+  background: var(--workflow-field);
+  color: var(--workflow-ink);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transform: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+
+  &:hover,
+  &:focus-visible {
+    border-color: color-mix(in srgb, var(--workflow-accent) 34%, var(--workflow-line));
+    box-shadow: 0 8px 18px color-mix(in srgb, var(--workflow-accent) 10%, transparent);
+    transform: none;
+  }
+
+  &.selected {
+    border-color: color-mix(in srgb, var(--workflow-accent) 58%, var(--workflow-line));
+    background: color-mix(in srgb, var(--workflow-accent) 6%, var(--workflow-field));
+  }
+
+  strong,
+  small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  strong {
+    padding-right: 20px;
+    font-size: 13px;
+    line-height: 1.25;
+    white-space: nowrap;
+  }
+
+  small {
+    display: -webkit-box;
+    color: var(--workflow-muted);
+    font-size: 12px;
+    line-height: 1.45;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+}
+
+.workflow-inline-edit {
+  display: inline-flex;
+  max-width: 100%;
+  min-width: 0;
+  position: relative;
+  vertical-align: top;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  text-align: inherit;
+
+  &.is-block {
+    width: 100%;
+    display: flex;
+  }
+
+  &.is-editing {
+    display: inline-flex;
+  }
+
+  &.is-block.is-editing {
+    width: 100%;
+    display: flex;
+  }
+}
+
+.workflow-inline-edit__display,
+.workflow-inline-edit__editor {
+  width: 100%;
+  min-width: 0;
+  min-height: 24px;
+  display: block;
+  margin: 0;
+  padding: 2px 4px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  text-align: inherit;
+  box-sizing: border-box;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.workflow-inline-edit__display {
+  white-space: pre-wrap;
+  cursor: text;
+  transform: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+
+  &:hover:not(:disabled),
+  &:focus-visible:not(:disabled) {
+    border-color: color-mix(in srgb, var(--workflow-accent) 28%, var(--workflow-line));
+    box-shadow: 0 4px 10px color-mix(in srgb, var(--workflow-accent) 8%, transparent);
+    transform: none;
+  }
+
+  // 只读态（候选生成期间）保留可读性，只去掉可编辑的暗示
+  &:disabled {
+    cursor: default;
+    opacity: 0.75;
+  }
+}
+
+.workflow-inline-edit.is-compact .workflow-inline-edit__display {
+  min-height: 0;
+  padding: 0;
+}
+
+.workflow-inline-edit__editor {
+  display: block;
+  appearance: none;
+  box-shadow: none;
+  overflow: auto;
+  resize: none;
+
+  &::placeholder {
+    color: color-mix(in srgb, var(--workflow-muted) 70%, transparent);
+  }
+}
+
+// 单行语义的编辑器（可折行 textarea）：隐藏滚动条，高度由脚本随内容调整
+.workflow-inline-edit__editor--singleline {
+  overflow: hidden;
+  resize: none;
+}
+
+.workflow-inline-edit.is-compact.is-editing {
+  width: 100%;
+}
+
+.workflow-inline-edit.is-compact.is-editing .workflow-inline-edit__editor {
+  min-height: 0;
+  padding: 0;
+  resize: none;
+}
+
+.workflow-outline-step {
+  display: grid;
+  grid-template-columns: minmax(0, 1.52fr) minmax(340px, 0.72fr);
+  align-items: stretch;
+  gap: 18px;
+  min-width: 0;
+  // 内容区填满固定高度、自身不滚，左右两栏各自独立滚动
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.outline-result-panel,
+.outline-suggestion-panel,
+.outline-config-panel {
+  padding: 20px 22px;
+}
+
+.outline-result-panel {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.outline-side-stack {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  align-content: start;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.outline-panel-heading {
+  margin-bottom: 14px;
+}
+
+.outline-section {
+  display: grid;
+  gap: 9px;
+  margin-top: 18px;
+
+  &:first-of-type {
+    margin-top: 0;
+  }
+
+  h3 {
+    margin: 0;
+    color: var(--workflow-ink);
+    font-size: 15px;
+    line-height: 1.25;
+  }
+}
+
+.outline-title-options {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.outline-title-chip {
+  min-width: 0;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  border: 1px solid var(--workflow-soft-line);
+  border-radius: 8px;
+  background: var(--workflow-field);
+  color: var(--workflow-muted);
+  font-size: 13px;
+  line-height: 1.3;
+  text-align: center;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+
+  &:hover,
+  &:focus-within {
+    border-color: color-mix(in srgb, var(--workflow-accent) 34%, var(--workflow-line));
+    box-shadow: 0 5px 12px color-mix(in srgb, var(--workflow-accent) 7%, transparent);
+  }
+
+  &.selected {
+    border-color: color-mix(in srgb, var(--workflow-accent) 42%, var(--workflow-line));
+    color: var(--workflow-accent);
+    background: color-mix(in srgb, var(--workflow-accent) 7%, var(--workflow-field));
+    font-weight: 700;
+  }
+
+  .workflow-inline-edit,
+  .workflow-inline-edit__display {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+.outline-result-panel > .outline-section:nth-of-type(2) {
+  .workflow-inline-edit {
+    color: var(--workflow-ink);
+    font-size: 14px;
+    line-height: 1.7;
+    text-align: left;
+  }
+
+  .workflow-inline-edit__display {
+    color: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    text-align: inherit;
+  }
+}
+
+.outline-world-list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--workflow-ink);
+  font-size: 14px;
+  line-height: 1.65;
+
+  li {
+    display: grid;
+    grid-template-columns: 12px minmax(0, 1fr);
+    gap: 4px;
+    min-width: 0;
+  }
+
+  > li > span {
+    color: var(--workflow-muted);
+  }
+}
+
+.outline-volume-flow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  align-items: stretch;
+  gap: 12px;
+  min-width: 0;
+  overflow: visible;
+}
+
+.outline-volume-card {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  padding: 12px 14px;
+  border: 1px solid var(--workflow-soft-line);
+  border-radius: 8px;
+  background: var(--workflow-field);
+  color: var(--workflow-ink);
+  cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+
+  &:hover,
+  &:focus-within {
+    border-color: color-mix(in srgb, var(--workflow-accent) 34%, var(--workflow-line));
+    box-shadow: 0 7px 16px color-mix(in srgb, var(--workflow-accent) 8%, transparent);
+  }
+
+  &.selected {
+    border-color: color-mix(in srgb, var(--workflow-accent) 42%, var(--workflow-line));
+    background: color-mix(in srgb, var(--workflow-accent) 6%, var(--workflow-field));
+  }
+
+  .workflow-inline-edit {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .workflow-inline-edit:first-child {
+    color: var(--workflow-ink);
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 1.35;
+  }
+
+  .workflow-inline-edit:last-child {
+    color: var(--workflow-muted);
+    font-size: 12px;
+    line-height: 1.45;
+  }
+}
+
+.outline-stage-section__hint {
+  margin: -2px 0 10px;
+  color: var(--workflow-muted);
+  font-size: 12px;
+}
+
+.outline-dynamic-range {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--workflow-muted);
+  font-size: 12px;
+
+  input {
+    width: 58px;
+    height: 28px;
+    padding: 0 6px;
+    border: 1px solid var(--workflow-soft-line);
+    border-radius: 6px;
+    outline: none;
+    background: var(--workflow-field);
+    color: var(--workflow-ink);
+    font: inherit;
+    text-align: center;
+
+    &:focus {
+      border-color: color-mix(in srgb, var(--workflow-accent) 45%, var(--workflow-line));
+    }
+
+    &:disabled {
+      opacity: 0.62;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.outline-stage-list {
+  display: grid;
+  gap: 10px;
+}
+
+.outline-stage-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--workflow-soft-line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--workflow-field) 76%, transparent);
+}
+
+.outline-stage-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.outline-stage-card__title {
+  min-width: 0;
+  color: var(--workflow-ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.outline-stage-order {
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--workflow-accent) 8%, var(--workflow-field));
+  color: var(--workflow-muted);
+  font-size: 12px;
+}
+
+.outline-stage-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+
+  label {
+    min-width: 0;
+    display: grid;
+    gap: 5px;
+
+    > span {
+      color: var(--workflow-muted);
+      font-size: 11px;
+      font-weight: 600;
+    }
+  }
+
+  .workflow-inline-edit {
+    min-width: 0;
+    padding: 8px 10px;
+    border: 1px solid var(--workflow-soft-line);
+    border-radius: 7px;
+    background: var(--workflow-field);
+    color: var(--workflow-ink);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+}
+
+/* 外层容器统一承载编辑态边框，内部控件只负责文本输入。 */
+.outline-surface-inline-edit.workflow-inline-edit,
+.setting-card .workflow-inline-edit,
+.setting-character-card .workflow-inline-edit,
+.setting-storyline-card .workflow-inline-edit {
+  .workflow-inline-edit__display,
+  .workflow-inline-edit__editor {
+    min-height: 0;
+    padding: 0;
+    border: 0 !important;
+    border-radius: 0;
+    outline: none !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+  }
+
+  .workflow-inline-edit__display:hover,
+  .workflow-inline-edit__display:focus,
+  .workflow-inline-edit__display:focus-visible,
+  .workflow-inline-edit__editor:hover,
+  .workflow-inline-edit__editor:focus,
+  .workflow-inline-edit__editor:focus-visible {
+    border: 0 !important;
+    outline: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+  }
+}
+
+.outline-section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 0;
+    background: transparent;
+    color: var(--workflow-muted);
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+  }
+}
+
+.outline-chapter-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 36px;
+  row-gap: 4px;
+}
+
+.outline-chapter-row {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+  padding: 8px 0 10px;
+  border-bottom: 1px dashed color-mix(in srgb, var(--workflow-muted) 28%, transparent);
+  color: var(--workflow-ink);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.outline-chapter-title {
+  font-weight: 600;
+}
+
+.outline-chapter-summary {
+  color: var(--workflow-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.outline-chapter-pending {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px dashed color-mix(in srgb, var(--workflow-muted) 40%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--workflow-field) 60%, transparent);
+}
+
+.outline-chapter-pending__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--workflow-ink);
+  font-size: 14px;
+  font-weight: 600;
+
+  i {
+    color: var(--workflow-muted);
+    font-size: 13px;
+  }
+
+  button {
+    margin-left: auto;
+    border: 0;
+    padding: 2px 4px;
+    background: transparent;
+    color: var(--workflow-muted);
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--workflow-ink);
+      text-decoration: underline;
+    }
+  }
+}
+
+.outline-chapter-pending__desc {
+  margin: 8px 0 0;
+  color: var(--workflow-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.outline-chapter-pending > .outline-chapter-grid {
+  margin-top: 10px;
+}
+
+.outline-chapter-row--pending .outline-chapter-title {
+  color: var(--workflow-muted);
+}
+
+.outline-suggestion-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+
+  button {
+    min-width: 0;
+    min-height: 64px;
+    display: grid;
+    gap: 6px;
+    align-content: center;
+    justify-items: center;
+    padding: 10px 8px;
+    border: 1px solid var(--workflow-soft-line);
+    border-radius: 8px;
+    background: var(--workflow-field);
+    color: var(--workflow-ink);
+    font-family: inherit;
+    text-align: center;
+    cursor: pointer;
+    transform: none;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+
+    &:hover,
+    &:focus-visible {
+      border-color: color-mix(in srgb, var(--workflow-accent) 34%, var(--workflow-line));
+      box-shadow: 0 7px 16px color-mix(in srgb, var(--workflow-accent) 8%, transparent);
+      transform: none;
+    }
+  }
+
+  i {
+    color: var(--workflow-accent);
+    font-size: 16px;
+  }
+
+  span {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  strong,
+  small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    font-size: 13px;
+    line-height: 1.2;
+  }
+
+  small {
+    color: var(--workflow-muted);
+    font-size: 12px;
+    line-height: 1.2;
+  }
+}
+
+.outline-config-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.outline-config-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+
+  div {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  dt {
+    color: var(--workflow-muted);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  dd {
+    min-width: 0;
+    margin: 0;
+    color: var(--workflow-ink);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+}
+
+.outline-regenerate-btn {
+  width: 100%;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--btn-outline-border);
+  border-radius: 8px;
+  background: var(--btn-outline-bg);
+  color: var(--workflow-ink);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transform: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+
+  &:hover:not(:disabled),
+  &:focus-visible:not(:disabled) {
+    border-color: color-mix(in srgb, var(--workflow-accent) 36%, var(--workflow-line));
+    color: var(--workflow-accent);
+    box-shadow: 0 7px 16px color-mix(in srgb, var(--workflow-accent) 8%, transparent);
+    transform: none;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+}
+
+// 「已更新」只是应用瞬间的定位提示，不是状态标签：亮一下就淡出，
+// 父级在动画结束的同一时刻清掉标记，元素消失时已经是透明的。
+.outline-updated-tag {
+  flex: none;
+  align-self: flex-start;
+  padding: 1px 8px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--workflow-accent) 12%, transparent);
+  color: var(--workflow-accent);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.7;
+  white-space: nowrap;
+  animation: outline-updated-flash 6s ease forwards;
+}
+
+@keyframes outline-updated-flash {
+  0% {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+
+  6% {
+    opacity: 1;
+    transform: none;
+  }
+
+  78% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+.outline-readonly-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--workflow-accent) 6%, var(--workflow-surface));
+  color: var(--workflow-muted);
+  font-size: 12px;
+
+  i {
+    color: var(--workflow-accent);
+  }
+}
+
+.outline-action-stack {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.setting-stale-tip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-main);
+  background: color-mix(in srgb, #d98324 12%, transparent);
+  border: 1px solid color-mix(in srgb, #d98324 32%, transparent);
+
+  > i {
+    line-height: inherit;
+    color: #d98324;
+  }
+}
+
+.outline-adjust-entry {
+  width: 100%;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--workflow-accent);
+  border-radius: 8px;
+  background: var(--workflow-accent);
+  color: var(--workflow-on-accent);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.18s ease, box-shadow 0.18s ease;
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.06);
+    box-shadow: 0 8px 18px color-mix(in srgb, var(--workflow-accent) 20%, transparent);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+}
+
+.outline-action-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--workflow-muted);
+  font-size: 12px;
+}
+
+/* —— 第三步「按要求调整大纲」抽屉 ——
+   绝对定位在页面容器内而不是 fixed：这样抽屉只覆盖工作流页面区域，
+   不会盖住应用顶栏，也不用去猜顶栏高度。 */
+.adjust-drawer {
+  position: absolute;
+  z-index: 20;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(520px, 92%);
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--workflow-soft-line);
+  border-radius: 12px 0 0 12px;
+  // --workflow-surface 是半透明玻璃色，面板压在不透明页面底色上才成立；
+  // 抽屉浮在内容之上，必须自带不透明底，否则正文会透上来和抽屉文字叠在一起。
+  // 这里把玻璃色合成到页面底色之上，既不透明又与其它面板同色。
+  background:
+    linear-gradient(var(--workflow-surface), var(--workflow-surface)),
+    var(--bg-main);
+  box-shadow: -18px 0 48px color-mix(in srgb, var(--workflow-ink) 18%, transparent);
+}
+
+.adjust-drawer__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--workflow-soft-line);
+
+  > button {
+    flex: none;
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--workflow-muted);
+    cursor: pointer;
+
+    &:hover {
+      background: var(--workflow-subtle);
+      color: var(--workflow-ink);
+    }
+  }
+}
+
+.adjust-drawer__heading {
+  min-width: 0;
+}
+
+.adjust-drawer__title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  strong {
+    color: var(--workflow-ink);
+    font-size: 17px;
+    font-weight: 700;
+  }
+}
+
+.adjust-drawer-badge {
+  padding: 2px 8px;
+  border: 1px solid var(--workflow-soft-line);
+  border-radius: 999px;
+  color: var(--workflow-muted);
+  font-size: 12px;
+  line-height: 1.6;
+
+  &.is-done {
+    border-color: color-mix(in srgb, var(--el-color-success) 40%, transparent);
+    background: color-mix(in srgb, var(--el-color-success) 10%, transparent);
+    color: var(--el-color-success);
+  }
+}
+
+.adjust-drawer__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 20px;
+  display: grid;
+  align-content: start;
+  gap: 18px;
+}
+
+.adjust-drawer-field {
+  display: grid;
+  gap: 10px;
+
+  h4 {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin: 0;
+    color: var(--workflow-ink);
+    font-size: 14px;
+    font-weight: 600;
+
+    small {
+      color: var(--workflow-muted);
+      font-size: 12px;
+      font-weight: 400;
+    }
+  }
+}
+
+.adjust-drawer-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  button {
+    padding: 7px 14px;
+    border: 1px solid var(--workflow-outline);
+    border-radius: 8px;
+    background: var(--workflow-surface);
+    color: var(--workflow-ink);
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+
+    &:hover {
+      border-color: color-mix(in srgb, var(--workflow-accent) 34%, var(--workflow-line));
+    }
+
+    &.active {
+      border-color: var(--workflow-accent);
+      background: color-mix(in srgb, var(--workflow-accent) 8%, var(--workflow-surface));
+      color: var(--workflow-accent);
+      font-weight: 600;
+    }
+  }
+}
+
+.adjust-drawer-textarea {
+  position: relative;
+
+  textarea {
+    width: 100%;
+    min-height: 180px;
+    max-height: 60vh;
+    padding: 12px 14px 28px;
+    border: 1px solid var(--workflow-outline);
+    border-radius: 8px;
+    background: var(--workflow-field);
+    color: var(--workflow-ink);
+    font: inherit;
+    line-height: 1.6;
+    outline: none;
+    // 要求可能写得很长，允许纵向拖拽调整
+    resize: vertical;
+
+    &:focus {
+      border-color: var(--workflow-outline-focus);
+      background: var(--workflow-field-focus);
+    }
+  }
+
+  em {
+    position: absolute;
+    right: 12px;
+    bottom: 10px;
+    color: var(--workflow-muted);
+    font-size: 12px;
+    font-style: normal;
+    pointer-events: none;
+  }
+}
+
+.adjust-drawer-preserve {
+  display: grid;
+  gap: 6px;
+
+  label {
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    align-items: start;
+    gap: 10px;
+    min-width: 0;
+    padding: 8px 10px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    color: var(--workflow-ink);
+    cursor: pointer;
+
+    input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    > i {
+      margin-top: 1px;
+      color: var(--workflow-muted);
+      font-size: 15px;
+    }
+
+    strong {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    small {
+      display: block;
+      margin-top: 2px;
+      color: var(--workflow-muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    &:hover {
+      background: var(--workflow-subtle);
+    }
+
+    &.active {
+      border-color: color-mix(in srgb, var(--workflow-accent) 30%, transparent);
+      background: color-mix(in srgb, var(--workflow-accent) 6%, transparent);
+
+      > i {
+        color: var(--workflow-accent);
+      }
+    }
+  }
+}
+
+.adjust-drawer-switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--workflow-ink);
+  font-size: 14px;
+}
+
+.adjust-drawer-switch {
+  flex: none;
+  width: 42px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--workflow-muted) 34%, transparent);
+  cursor: pointer;
+  transition: background 0.18s ease;
+
+  i {
+    display: block;
+    width: 18px;
+    height: 18px;
+    margin-left: 3px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform 0.18s ease;
+  }
+
+  &.on {
+    background: var(--workflow-accent);
+
+    i {
+      transform: translateX(18px);
+    }
+  }
+}
+
+.adjust-drawer-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  color: var(--workflow-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.adjust-drawer-cost {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--workflow-accent) 6%, var(--workflow-surface));
+  color: var(--workflow-muted);
+  font-size: 12px;
+
+  i {
+    color: var(--workflow-accent);
+  }
+}
+
+.adjust-drawer-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--el-color-danger) 30%, var(--workflow-line));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--el-color-danger) 6%, transparent);
+  color: var(--el-color-danger);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.adjust-drawer-progress {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--workflow-soft-line);
+  border-radius: 10px;
+  background: var(--workflow-subtle);
+
+  em {
+    color: var(--workflow-ink);
+    font-size: 13px;
+    font-style: normal;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.adjust-drawer-progress__head {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--workflow-ink);
+  font-size: 14px;
+
+  i {
+    color: var(--workflow-accent);
+  }
+}
+
+.adjust-drawer-progress__bar {
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--workflow-muted) 20%, transparent);
+  overflow: hidden;
+}
+
+.adjust-drawer-progress__value {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--workflow-accent);
+  transition: width 0.3s ease;
+}
+
+.adjust-drawer-stages {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: grid;
+    grid-template-columns: 22px 16px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 0;
+    color: var(--workflow-muted);
+    font-size: 13px;
+
+    &.is-running {
+      color: var(--workflow-accent);
+      font-weight: 600;
+    }
+
+    &.is-done {
+      color: var(--workflow-ink);
+    }
+  }
+}
+
+.adjust-drawer-stages__dot {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--workflow-soft-line);
+  border-radius: 50%;
+  font-size: 11px;
+
+  .is-done & {
+    border-color: var(--el-color-success);
+    background: var(--el-color-success);
+    color: #fff;
+  }
+
+  .is-running & {
+    border-color: var(--workflow-accent);
+    color: var(--workflow-accent);
+  }
+}
+
+.adjust-drawer-stages__status {
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.adjust-drawer-summary {
+  padding: 10px 12px;
+  border: 1px solid var(--workflow-soft-line);
+  border-radius: 8px;
+  background: var(--workflow-subtle);
+
+  summary {
+    color: var(--workflow-ink);
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  p {
+    margin: 8px 0 0;
+    color: var(--workflow-muted);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+}
+
+.adjust-drawer-candidate {
+  display: grid;
+  gap: 12px;
+}
+
+.adjust-drawer-candidate__head strong {
+  color: var(--workflow-ink);
+  font-size: 14px;
+}
+
+.adjust-drawer-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  span {
+    padding: 3px 10px;
+    border: 1px solid color-mix(in srgb, var(--workflow-accent) 34%, transparent);
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--workflow-accent) 7%, transparent);
+    color: var(--workflow-accent);
+    font-size: 12px;
+  }
+}
+
+.adjust-drawer-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--el-color-warning) 34%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--el-color-warning) 10%, transparent);
+  color: var(--el-color-warning);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.adjust-drawer-change {
+  padding: 12px 14px;
+  border: 1px solid var(--workflow-soft-line);
+  border-radius: 10px;
+  background: var(--workflow-surface);
+
+  dl {
+    display: grid;
+    gap: 8px;
+    margin: 10px 0 0;
+  }
+
+  dl > div {
+    display: grid;
+    grid-template-columns: 62px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  dt {
+    color: var(--workflow-muted);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  dd {
+    margin: 0;
+    color: var(--workflow-muted);
+    font-size: 13px;
+    line-height: 1.6;
+
+    &.is-next {
+      color: var(--workflow-ink);
+    }
+  }
+}
+
+.adjust-drawer-change__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  span {
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--workflow-accent) 12%, transparent);
+    color: var(--workflow-accent);
+    font-size: 11px;
+  }
+
+  strong {
+    color: var(--workflow-ink);
+    font-size: 13px;
+  }
+}
+
+.adjust-drawer-consistency {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--el-color-success) 8%, transparent);
+  color: var(--el-color-success);
+  font-size: 12px;
+  line-height: 1.6;
+
+  &.is-failed {
+    background: color-mix(in srgb, var(--el-color-warning) 10%, transparent);
+    color: var(--el-color-warning);
+  }
+}
+
+// Font Awesome 给图标写死了 line-height: 1，图标盒只有一个字高，
+// 放进 1.6 行高的说明段落里会明显偏上。让它继承行高，盒高等于一行文字，
+// glyph 自然落在首行正中；文案折行时也仍然对齐第一行而不是整段居中。
+.adjust-drawer-note,
+.adjust-drawer-error,
+.adjust-drawer-consistency,
+.adjust-drawer-warning {
+  > i {
+    flex: none;
+    line-height: inherit;
+  }
+}
+
+.adjust-drawer__foot {
+  display: grid;
+  gap: 8px;
+  padding: 14px 20px 18px;
+  border-top: 1px solid var(--workflow-soft-line);
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+
+  // 带脚注的形态改回纵向堆叠，脚注独占一行。
+  &:has(.adjust-drawer-foot-note) {
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+  }
+}
+
+.adjust-drawer-foot-actions {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  gap: 8px;
+}
+
+.adjust-drawer-foot-note {
+  margin: 0;
+  color: var(--workflow-muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.adjust-drawer-btn {
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--workflow-outline);
+  border-radius: 8px;
+  background: var(--workflow-surface);
+  color: var(--workflow-ink);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+
+  &:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--workflow-accent) 34%, var(--workflow-line));
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  &.is-primary {
+    border-color: var(--workflow-accent);
+    background: var(--workflow-accent);
+    color: var(--workflow-on-accent);
+
+    &:hover:not(:disabled) {
+      filter: brightness(1.06);
+    }
+  }
+
+  &.is-outline {
+    border-color: var(--workflow-accent);
+    color: var(--workflow-accent);
+  }
+
+  &.is-danger {
+    border-color: color-mix(in srgb, var(--el-color-danger) 42%, transparent);
+    color: var(--el-color-danger);
+
+    i {
+      margin-right: 6px;
+      font-size: 12px;
+    }
+  }
+
+  &.is-block {
+    width: 100%;
+  }
+}
+
+.adjust-drawer-enter-active,
+.adjust-drawer-leave-active {
+  transition: transform 0.22s ease, opacity 0.22s ease;
+}
+
+.adjust-drawer-enter-from,
+.adjust-drawer-leave-to {
+  transform: translateX(16px);
+  opacity: 0;
+}
+
+.workflow-setting-step {
+  display: grid;
+  grid-template-columns: minmax(0, 1.58fr) minmax(340px, 0.72fr);
+  align-items: stretch;
+  gap: 18px;
+  min-width: 0;
+  // 内容区填满固定高度、自身不滚，左右两栏各自独立滚动
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.setting-editor-panel,
+.setting-assistant-panel,
+.setting-record-panel {
+  padding: 20px 22px;
+}
+
+.setting-editor-panel {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.setting-side-stack {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  align-content: start;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.setting-panel-head,
+.setting-side-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.setting-panel-head > button,
+.setting-side-title button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--workflow-muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--workflow-accent);
+    box-shadow: 0 6px 14px color-mix(in srgb, var(--workflow-accent) 8%, transparent);
+  }
+}
+
+.setting-tab-row {
+  // 面板本身是滚动容器，页签跟着内容一起滚走之后，挂在页签行上的「新增」
+  // 在矮屏幕上就够不到了。这里把页签行吸顶，标题仍然可以滚走以省出高度。
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 34px;
+  min-width: 0;
+  margin-top: 16px;
+  // 吸顶元素必须不透明，否则下方卡片会从它底下透出来
+  background: var(--workflow-surface);
+  border-bottom: 1px solid var(--workflow-soft-line);
+
+  button {
+    position: relative;
+    min-width: 0;
+    height: 42px;
+    border: 0;
+    background: transparent;
+    color: var(--workflow-ink);
+    font-family: inherit;
+    font-size: 15px;
+    cursor: pointer;
+    transition: color 0.18s ease;
+
+    &::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      bottom: -1px;
+      left: 0;
+      height: 2px;
+      background: transparent;
+    }
+
+    &.active {
+      color: var(--workflow-accent);
+      font-weight: 700;
+
+      &::after {
+        background: var(--workflow-accent);
+      }
+    }
+  }
+}
+
+.setting-tab-action {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border: 1px dashed color-mix(in srgb, var(--workflow-accent) 34%, var(--workflow-line));
+  border-radius: 8px;
+  background: transparent;
+  color: var(--workflow-muted);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition:
+    color 0.18s ease,
+    border-color 0.18s ease;
+
+  > i {
+    line-height: inherit;
+    font-size: 12px;
+  }
+
+  &:hover {
+    color: var(--workflow-accent);
+    border-color: color-mix(in srgb, var(--workflow-accent) 62%, transparent);
+  }
+}
+
+.setting-tab-body {
+  margin-top: 18px;
+}
+
+.setting-card {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px;
+  border: 1px solid var(--workflow-soft-line);
+  border-radius: 8px;
+  background: var(--workflow-field);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+
+  &:hover,
+  &:focus-within {
+    border-color: color-mix(in srgb, var(--workflow-accent) 34%, var(--workflow-line));
+    box-shadow: 0 7px 18px color-mix(in srgb, var(--workflow-accent) 8%, transparent);
+  }
+}
+
+.setting-card__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.setting-card__icon {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  flex: 0 0 28px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--workflow-accent) 10%, transparent);
+  color: var(--workflow-accent);
+  font-size: 14px;
+}
+
+.setting-card__title {
+  flex: 1;
+  min-width: 0;
+  color: var(--workflow-ink);
+  font-size: 15px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.setting-card__body {
+  min-width: 0;
+  color: var(--workflow-ink);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.setting-card-grid {
+  display: grid;
+  // 世界背景的卡片逐行铺满，不再按 size 分栏。
+  // 世界名称是单行输入，与几百字的世界概览并排时会被同行等高拉成一大片空白；
+  // 而长文挤在 1/3 宽里行数翻倍，又把下面的世界规则顶出视口。
+  grid-template-columns: minmax(0, 1fr);
+  // 每张卡按自身内容取高，不被同行最高的那张拉齐
+  align-items: start;
+  gap: 14px;
+}
+
+.setting-tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.setting-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border: 1px solid color-mix(in srgb, var(--workflow-accent) 24%, var(--workflow-line));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--workflow-accent) 8%, transparent);
+  color: var(--workflow-accent);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.setting-bullet-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    position: relative;
+    padding-left: 16px;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 9px;
+      left: 2px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--workflow-accent);
+    }
+  }
+}
+
+.setting-core-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.setting-core-grid > .setting-card.size-full {
+  grid-column: 1 / -1;
+}
+
+.setting-core-intro {
+  color: var(--workflow-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.setting-realm-ladder {
+  display: grid;
+  gap: 12px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    position: relative;
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    align-items: baseline;
+    gap: 4px 10px;
+    padding-left: 18px;
+
+    > strong {
+      color: var(--workflow-accent);
+      font-size: 13px;
+    }
+  }
+}
+
+.setting-realm-dot {
+  position: absolute;
+  top: 7px;
+  left: 2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--workflow-accent);
+
+  &.is-muted {
+    background: color-mix(in srgb, var(--workflow-muted) 50%, transparent);
+  }
+}
+
+.setting-mini-icon {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  flex: 0 0 32px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--workflow-accent) 10%, transparent);
+  color: var(--workflow-accent);
+  font-size: 14px;
+}
+
+.setting-ability-row {
+  display: grid;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.setting-ability-item {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--workflow-soft-line);
+  border-radius: 8px;
+  background: var(--workflow-surface);
+
+  strong {
+    display: block;
+    margin-bottom: 2px;
+    font-size: 13px;
+  }
+}
+
+.setting-dimension-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.setting-dimension-label {
+  color: var(--workflow-muted);
+  font-size: 13px;
+}
+
+.setting-mechanic-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.setting-mechanic-item {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--workflow-soft-line);
+  border-radius: 8px;
+  background: var(--workflow-surface);
+
+  strong {
+    display: block;
+    margin-bottom: 2px;
+    font-size: 13px;
+  }
+}
+
+.setting-resource-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.setting-resource-item {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid var(--workflow-soft-line);
+  border-radius: 8px;
+  background: var(--workflow-surface);
+
+  strong {
+    font-size: 13px;
+  }
+}
+
+.setting-character-wrap {
+  display: grid;
+  gap: 14px;
+}
+
+.setting-character-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.setting-character-card {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--workflow-soft-line);
+  border-radius: 10px;
+  background: var(--workflow-field);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+
+  &:hover,
+  &:focus-within {
+    border-color: color-mix(in srgb, var(--workflow-accent) 34%, var(--workflow-line));
+    box-shadow: 0 7px 18px color-mix(in srgb, var(--workflow-accent) 8%, transparent);
+  }
+}
+
+.setting-character-avatar {
+  width: 64px;
+  height: 80px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--workflow-accent) 8%, var(--workflow-subtle));
+  color: color-mix(in srgb, var(--workflow-muted) 64%, transparent);
+  font-size: 28px;
+}
+
+.setting-character-body {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.setting-character-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.setting-character-name {
+  color: var(--workflow-ink);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.setting-character-badge {
+  flex: 0 0 auto;
+  padding: 1px 8px;
+  border: 1px solid color-mix(in srgb, var(--workflow-accent) 32%, var(--workflow-line));
+  border-radius: 999px;
+  color: var(--workflow-accent);
+  background: color-mix(in srgb, var(--workflow-accent) 8%, transparent);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.setting-storyline-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  color: color-mix(in srgb, var(--workflow-muted) 78%, transparent);
+
+  button {
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font-size: 12px;
+    line-height: 1;
+
+    &:hover {
+      color: var(--workflow-accent);
+    }
+  }
+}
+
+// 常态隐藏，悬停才出现：五张卡片并排，常驻两个图标会把标题挤得很局促
+.setting-storyline-card:hover .setting-storyline-actions,
+.setting-storyline-actions:focus-within {
+  opacity: 1;
+}
+
+.setting-character-actions {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: color-mix(in srgb, var(--workflow-muted) 78%, transparent);
+  font-size: 13px;
+
+  button {
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font-size: 13px;
+
+    &:hover {
+      color: var(--workflow-accent);
+    }
+  }
+}
+
+.setting-character-field {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.setting-field-label {
+  color: var(--workflow-muted);
+  white-space: nowrap;
+}
+
+.setting-character-divider {
+  height: 0;
+  margin: 2px 0;
+  border-top: 1px dashed var(--workflow-soft-line);
+}
+
+.setting-storyline-wrap {
+  display: grid;
+  min-width: 0;
+  gap: 14px;
+}
+
+.setting-storyline-intro {
+  margin: 0;
+  color: var(--workflow-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* 故事线卡片和底部时间线共用滚动容器，避免窄容器下错位或逐字换行。 */
+.setting-storyline-scroll {
+  --storyline-card-min: 178px;
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 2px 10px;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--workflow-accent) 36%, transparent) transparent;
+}
+
+.setting-storyline-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.setting-storyline-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.setting-storyline-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--workflow-accent) 28%, transparent);
+}
+
+.setting-storyline-track {
+  min-width: 100%;
+  display: grid;
+  grid-template-columns: repeat(var(--storyline-count), minmax(var(--storyline-card-min), 1fr));
+  align-items: stretch;
+  gap: 12px;
+}
+
+.setting-storyline-card {
+  // 操作按钮绝对定位在卡片右上角，这里必须建立定位上下文
+  position: relative;
+  min-width: var(--storyline-card-min);
+  min-height: 318px;
+  display: grid;
+  align-content: start;
+  justify-items: stretch;
+  gap: 10px;
+  padding: 16px 18px;
+  border: 1px solid var(--workflow-soft-line);
+  border-radius: 10px;
+  background: var(--workflow-field);
+  text-align: left;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+
+  &:hover,
+  &:focus-within {
+    border-color: color-mix(in srgb, var(--workflow-accent) 34%, var(--workflow-line));
+    box-shadow: 0 7px 18px color-mix(in srgb, var(--workflow-accent) 8%, transparent);
+  }
+}
+
+.setting-storyline-index {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  justify-self: center;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--workflow-accent) 40%, var(--workflow-line));
+  border-radius: 50%;
+  color: var(--workflow-accent);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.setting-storyline-title {
+  display: block;
+  min-height: 42px;
+  color: var(--workflow-ink);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+  word-break: keep-all;
+}
+
+.setting-storyline-icon {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  justify-self: center;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--workflow-accent) 8%, var(--workflow-subtle));
+  color: color-mix(in srgb, var(--workflow-accent) 78%, var(--workflow-muted));
+  font-size: 18px;
+}
+
+.setting-storyline-desc {
+  width: 100%;
+  min-height: 96px;
+  color: var(--workflow-muted);
+  font-size: 12px;
+  line-height: 1.55;
+  text-align: left;
+}
+
+.setting-storyline-event-label {
+  width: 100%;
+  margin-top: 4px;
+  color: var(--workflow-accent);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.setting-storyline-event {
+  width: 100%;
+  min-height: 62px;
+  color: var(--workflow-muted);
+  font-size: 12px;
+  line-height: 1.55;
+  text-align: left;
+}
+
+.setting-storyline-desc .workflow-inline-edit__display,
+.setting-storyline-desc .workflow-inline-edit__editor,
+.setting-storyline-event .workflow-inline-edit__display,
+.setting-storyline-event .workflow-inline-edit__editor {
+  min-height: inherit;
+  padding: 3px 4px;
+  text-align: inherit;
+}
+
+.setting-storyline-timeline {
+  position: relative;
+  min-width: 100%;
+  height: 18px;
+  display: grid;
+  grid-template-columns: repeat(var(--storyline-count), minmax(var(--storyline-card-min), 1fr));
+  align-items: center;
+  gap: 12px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    left: 8px;
+    border-top: 2px dashed color-mix(in srgb, var(--workflow-accent) 40%, var(--workflow-line));
+  }
+}
+
+.setting-storyline-dot {
+  position: relative;
+  justify-self: center;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--workflow-accent);
+  background: var(--workflow-surface);
+}
+
+.setting-assistant-hint {
+  margin: 8px 0 0;
+  color: var(--workflow-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.setting-assistant-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.setting-assistant-grid button {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--workflow-soft-line);
+  border-radius: 8px;
+  background: var(--workflow-surface);
+  color: var(--workflow-ink);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transform: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+
+  &:hover,
+  &:focus-visible {
+    border-color: color-mix(in srgb, var(--workflow-accent) 34%, var(--workflow-line));
+    box-shadow: 0 7px 16px color-mix(in srgb, var(--workflow-accent) 8%, transparent);
+    transform: none;
+  }
+
+  > i {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--workflow-accent) 10%, transparent);
+    color: var(--workflow-accent);
+    font-size: 14px;
+  }
+
+  span {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  strong,
+  small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    font-size: 13px;
+    line-height: 1.25;
+  }
+
+  small {
+    color: var(--workflow-muted);
+    font-size: 11px;
+    line-height: 1.25;
+  }
+}
+
+.setting-record-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.setting-side-title strong {
+  color: var(--workflow-ink);
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.setting-record-panel ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.setting-record-panel li {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--workflow-muted);
+  font-size: 12px;
+  line-height: 1.4;
+
+  i {
+    color: var(--workflow-accent);
+  }
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  time {
+    color: color-mix(in srgb, var(--workflow-muted) 82%, transparent);
+  }
+}
+
+.placeholder-step {
+  min-height: 510px;
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  align-items: start;
+  gap: 22px;
+  padding: 40px;
+}
+
+.placeholder-step__index {
+  width: 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--workflow-accent);
+  color: var(--workflow-on-accent);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.placeholder-step h2 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.25;
+}
+
+.placeholder-step p {
+  margin: 10px 0 24px;
+  color: var(--workflow-muted);
+  font-size: 14px;
+}
+
+.placeholder-step__body {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+
+  span {
+    min-width: 0;
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px;
+    border: 1px dashed color-mix(in srgb, var(--workflow-accent) 24%, var(--workflow-line));
+    border-radius: 8px;
+    background: var(--workflow-subtle);
+    color: var(--workflow-muted);
+  }
+
+  i {
+    color: var(--workflow-accent);
+  }
+}
+
+.workflow-book-footer {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  min-width: 0;
+  margin-top: 8px;
+  padding: 8px 0 12px;
+  border-top: 1px solid var(--workflow-soft-line);
+}
+
+.primary-action,
+.ghost-action {
+  min-width: 122px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 26px;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.primary-action {
+  min-width: 226px;
+  border: 1px solid color-mix(in srgb, var(--workflow-accent) 78%, var(--workflow-line));
+  color: var(--workflow-on-accent);
+  background: var(--workflow-accent);
+  box-shadow: 0 9px 20px color-mix(in srgb, var(--workflow-accent) 28%, transparent);
+  font-weight: 700;
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--workflow-accent) 88%, var(--workflow-ink));
+    color: var(--workflow-on-accent);
+    background: color-mix(in srgb, var(--workflow-accent) 88%, var(--workflow-ink));
+  }
+}
+
+.ghost-action {
+  border: 1px solid var(--btn-outline-border);
+  color: var(--workflow-ink);
+  background: var(--btn-outline-bg);
+
+  &:hover {
+    border-color: var(--workflow-accent);
+    background: var(--btn-outline-hover-bg);
+  }
+
+  &.ghost-action--danger {
+    border-color: color-mix(in srgb, #c0392b 45%, var(--btn-outline-border));
+    color: #c0392b;
+
+    &:hover {
+      border-color: #c0392b;
+      background: color-mix(in srgb, #c0392b 10%, var(--btn-outline-bg));
+    }
+  }
+}
+
+/* 生成中态底部操作条可读性修复：
+   半透明按钮底（rgba 白 0.5）× disabled 整体 opacity 双重透明，会让纹理背景
+   透上来、相邻按钮文字视觉混叠。改为：按钮实底 + 禁用态"变灰不变透明"，
+   并允许换行，任意窗宽下都不挤压重叠。 */
+.workflow-book-footer {
+  position: relative;
+  z-index: 2;
+  flex-wrap: wrap;
+
+  .ghost-action {
+    background: var(--workflow-surface);
+  }
+
+  .ghost-action:disabled {
+    opacity: 1;
+    cursor: not-allowed;
+    color: var(--workflow-muted);
+    border-color: var(--workflow-soft-line);
+    background: var(--workflow-surface);
+    box-shadow: none;
+  }
+
+  .primary-action:disabled {
+    opacity: 1;
+    cursor: not-allowed;
+    color: var(--workflow-on-accent);
+    border-color: transparent;
+    background: color-mix(in srgb, var(--workflow-accent) 62%, var(--workflow-surface));
+    box-shadow: none;
+  }
+}
+
+/* 容器查询按内容宽度重排，避免侧边栏占宽后仍按视口断点布局。 */
+@container (max-width: 1180px) {
+  .workflow-book-top-actions {
+    top: 14px;
+    right: 14px;
+  }
+
+  .workflow-book-steps {
+    gap: 10px;
+    padding: 12px 142px 12px 18px;
+  }
+
+  .workflow-book-step {
+    gap: 8px;
+  }
+
+  .workflow-book-step__copy strong {
+    font-size: 13px;
+  }
+
+  .workflow-book-step-line {
+    flex-basis: 28px;
+    min-width: 12px;
+  }
+
+  .workflow-first-step__body {
+    grid-template-columns: minmax(0, 1.58fr) minmax(300px, 0.82fr);
+
+    &.is-original-mode {
+      grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.9fr);
+    }
+  }
+
+
+  .workflow-base-step {
+    grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.82fr);
+    gap: 14px;
+  }
+
+  .workflow-outline-step {
+    grid-template-columns: minmax(0, 1.38fr) minmax(320px, 0.82fr);
+    gap: 14px;
+  }
+
+  .workflow-setting-step {
+    grid-template-columns: minmax(0, 1.38fr) minmax(320px, 0.82fr);
+    gap: 14px;
+  }
+
+  .base-platform-grid {
+    grid-template-columns: repeat(auto-fit, minmax(142px, 1fr));
+  }
+
+  .base-chip-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .base-select-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .outline-title-options {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .outline-suggestion-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .setting-character-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (max-width: 1040px) {
+  .workflow-book-top-actions {
+    position: static;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+    pointer-events: auto;
+  }
+
+  .workflow-book-steps {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    padding: 12px 16px;
+  }
+
+  .workflow-book-step {
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .workflow-book-step-line {
+    display: none;
+  }
+
+  .workflow-book-step__copy {
+    max-width: 90px;
+  }
+
+  .workflow-first-step__body,
+  .workflow-base-step,
+  .workflow-outline-step,
+  .workflow-setting-step,
+  .placeholder-step__body {
+    grid-template-columns: 1fr;
+  }
+
+  .workflow-first-step__body.is-original-mode {
+    grid-template-columns: 1fr;
+  }
+
+  .original-assist-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .workflow-base-side {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .creative-direction-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .outline-side-stack {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .setting-side-stack {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .skill-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* 中等宽度仍保留灵感区双栏，避免过早堆叠后把右侧辅助区压出可视区域。 */
+@container (min-width: 901px) and (max-width: 1040px) {
+  .workflow-book-top-actions {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    margin-bottom: 0;
+    pointer-events: none;
+  }
+
+  .workflow-history-link {
+    pointer-events: auto;
+  }
+
+  .workflow-book-steps {
+    display: flex;
+    grid-template-columns: none;
+    padding: 12px 142px 12px 18px;
+  }
+
+  .workflow-book-step {
+    justify-content: flex-start;
+  }
+
+  .workflow-book-step-line {
+    display: flex;
+  }
+
+  .workflow-book-step__copy {
+    max-width: none;
+  }
+
+  .workflow-first-step__body.is-original-mode {
+    grid-template-columns: minmax(0, 1.38fr) minmax(300px, 0.9fr);
+  }
+
+  .original-assist-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* 真正进入窄栏时由主体统一滚动，左右面板顺序展示且不裁掉第二栏。 */
+@container (max-width: 900px) {
+  .workflow-first-step {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+    grid-template-rows: auto auto auto;
+  }
+
+  .workflow-first-step__body,
+  .workflow-first-step__body.is-original-mode {
+    min-height: auto;
+    overflow: visible;
+    grid-template-columns: 1fr;
+
+    // 窄栏由主体统一滚动，面板不再受可用高度限制。
+    > * {
+      max-height: none;
+    }
+  }
+
+  .workflow-side-stack {
+    overflow: visible;
+  }
+
+}
+
+@container (max-width: 760px) {
+  // 窄栏下再留一条 420px 抽屉，后面露出的大纲只剩一线宽，读不了也点不到，直接铺满。
+  .adjust-drawer {
+    width: 100%;
+    border-left: 0;
+    border-radius: 0;
+  }
+
+  .workflow-book-steps,
+  .inspiration-panel,
+  .base-config-panel,
+    .outline-result-panel,
+    .outline-suggestion-panel,
+    .outline-config-panel,
+    .setting-editor-panel,
+    .setting-assistant-panel,
+    .setting-record-panel,
+    .placeholder-step {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .workflow-book-steps {
+    min-height: 68px;
+  }
+
+  .workflow-book-step {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .workflow-book-step__index {
+    width: 30px;
+    height: 30px;
+    flex-basis: 30px;
+    font-size: 14px;
+  }
+
+  .workflow-book-step__copy {
+    max-width: 100%;
+
+    small {
+      display: none;
+    }
+
+    strong {
+      font-size: 12px;
+    }
+  }
+
+  .original-assist-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .base-platform-grid,
+  .base-select-grid,
+  .skill-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .creative-direction-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .creative-direction-heading,
+  .writing-focus-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+
+
+  .outline-title-options,
+  .outline-suggestion-grid,
+  .outline-chapter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .setting-core-grid,
+  .setting-character-grid,
+  .setting-assistant-grid,
+  .setting-mechanic-grid,
+  .setting-resource-row {
+    grid-template-columns: 1fr;
+  }
+
+  .setting-core-grid > .setting-card.size-full {
+    grid-column: 1 / -1;
+  }
+
+  .outline-volume-flow {
+    grid-template-columns: 1fr;
+  }
+
+  .base-chip-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+
+  .placeholder-step {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .workflow-book-footer {
+    flex-wrap: wrap;
+  }
+
+  .primary-action,
+  .ghost-action {
+    flex: 1 1 160px;
+    min-width: 0;
+  }
+}
+}
+
+
+.workflow-book-page .ai-pending-state {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  color: var(--ink-sec);
+  text-align: center;
+  padding: 40px 20px;
+
+  i {
+    font-size: 40px;
+    color: var(--ink-muted, var(--ink-sec));
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 22px;
+    color: var(--ink-main);
+    font-family: var(--font-serif);
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.8;
+    max-width: 420px;
+  }
+}

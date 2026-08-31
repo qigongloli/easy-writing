@@ -1,0 +1,99 @@
+/* 公共关系画布壳样式（全局块，选择器全部锚在 .graph-shell 下不外溢）。
+   内核为 Vue Flow：这里只做水墨主题适配——节点卡基座、端口悬停浮现、
+   幽灵连线、连线默认色、小地图。语义线色（rel-* / line-*）由使用方补充。 */
+
+.graph-shell {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+
+  .vue-flow {
+    width: 100%;
+    height: 100%;
+    background:
+      radial-gradient(color-mix(in srgb, var(--ink-sec) 16%, transparent) 1px, transparent 1px);
+    background-size: 18px 18px;
+  }
+
+  /* 节点：库的定位壳保持裸奔，卡片视觉全在 body 上 */
+  .vue-flow__node-card {
+    padding: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+
+    .graph-card-body {
+      width: 100%;
+      min-height: inherit;
+      border: 1px solid var(--ui-border);
+      border-radius: 8px;
+      background: color-mix(in srgb, var(--bg-main) 86%, var(--ui-glass-bg));
+      box-shadow: 0 8px 20px color-mix(in srgb, var(--ink-main) 10%, transparent);
+      cursor: grab;
+      user-select: none;
+    }
+
+    &.is-picked .graph-card-body,
+    &.selected .graph-card-body {
+      border-color: color-mix(in srgb, var(--ink-accent) 70%, var(--ui-border));
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--ink-accent) 22%, transparent);
+    }
+  }
+
+  /* 端口：悬停节点或拖线中浮现（ComfyUI 手感） */
+  .vue-flow__handle {
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--ink-accent);
+    background: var(--bg-main);
+    opacity: 0;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    cursor: crosshair;
+
+    &:hover {
+      transform-origin: center;
+      background: var(--ink-accent);
+    }
+  }
+
+  .vue-flow__node:hover .vue-flow__handle,
+  .vue-flow.connecting .vue-flow__handle,
+  .vue-flow__handle.connecting,
+  .vue-flow__handle.valid {
+    opacity: 1;
+  }
+
+  /* 拖线中的幽灵线 */
+  .vue-flow__connection-path {
+    stroke: var(--ink-accent);
+    stroke-width: 2;
+    stroke-dasharray: 6 5;
+  }
+
+  /* 连线默认观感（语义色由使用方按类覆写） */
+  .vue-flow__edge-path {
+    stroke: color-mix(in srgb, var(--ink-accent) 64%, var(--ink-sec));
+    stroke-width: 2;
+  }
+
+  .vue-flow__edge.selected .vue-flow__edge-path {
+    stroke-width: 3.5;
+  }
+
+  /* 连线文字标签：胶囊底 */
+  .vue-flow__edge-text {
+    fill: var(--ink-main);
+    font-size: 12px;
+  }
+
+  .vue-flow__edge-textbg {
+    fill: color-mix(in srgb, var(--bg-main) 94%, var(--ui-glass-bg));
+  }
+
+  /* 小地图 */
+  .vue-flow__minimap {
+    border: 1px solid var(--ui-border);
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--bg-main) 88%, var(--ui-glass-bg));
+  }
+}

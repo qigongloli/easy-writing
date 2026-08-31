@@ -1,0 +1,460 @@
+/* WritingEditor 外壳样式（scoped，经 SFC style src 引入）：
+   气泡菜单全局层 + 编辑器根容器/工具栏/正文区 + AI 配置面板与主题覆盖。
+   状态栏样式在 writing-editor-statusbar.scss。 */
+:global(.custom-bubble-menu) {
+  position: fixed;
+  z-index: 99999;
+  display: flex;
+  padding: 0;
+  pointer-events: auto;
+  white-space: nowrap;
+
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) scale(0.95);
+  transform-origin: center bottom;
+  transition:
+    opacity 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+:global(.custom-bubble-menu.is-visible) {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) scale(1);
+}
+
+
+.writing-editor {
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 10;
+  /* 确保容器有明确的高度 */
+  height: 100%;
+  overflow: hidden;
+
+  .editor-toolbar {
+    height: 40px;
+    min-width: 0;
+    max-width: 100%;
+    display: flex;
+    align-items: center;
+    position: relative;
+    padding: 0;
+    font-size: 14px;
+    color: var(--ink-sec);
+    background: var(--toolbar-bg, transparent);
+    overflow: hidden;
+
+    .toolbar-scroll {
+      height: 100%;
+      min-width: 0;
+      flex: 1 1 auto;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 0 16px;
+      overflow-x: hidden;
+      overflow-y: hidden;
+      transition: padding 0.2s ease;
+    }
+
+    &.compact-mode {
+      .toolbar-scroll {
+        gap: 14px;
+        padding: 0 16px;
+      }
+
+      .toolbar-group {
+        gap: 10px;
+      }
+
+      .toolbar-actions {
+        gap: 10px;
+      }
+    }
+
+    &.toolbar-icon-only-mode {
+      .toolbar-scroll {
+        gap: 4px;
+        padding: 0 6px;
+      }
+
+      .toolbar-group,
+      .toolbar-actions {
+        gap: 3px;
+      }
+
+      .toolbar-divider {
+        display: none;
+      }
+    }
+
+    .toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 0 0 auto;
+      flex-wrap: nowrap;
+
+      /* 修复 SmartPopover 在 flex 容器中的对齐问题 */
+      :deep(.smart-popover-wrapper),
+      :deep(.el-dropdown),
+      :deep(.dropdown-trigger) {
+        display: flex;
+        align-items: center;
+        height: 100%;
+      }
+
+      :deep(.trigger-wrapper) {
+        display: flex;
+        align-items: center;
+      }
+    }
+
+    .toolbar-divider {
+      width: 1px;
+      height: 20px;
+      background: currentColor;
+      opacity: 0.1;
+      flex: 0 0 auto;
+    }
+
+    .dropdown-trigger {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .toolbar-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 28px;
+      padding: 0 4px;
+      gap: 4px;
+      background: none;
+      border: none;
+      border-radius: 4px;
+      color: var(--ink-sec);
+      font-size: 14px;
+      line-height: 1;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: system-ui, sans-serif;
+      white-space: nowrap;
+      flex: 0 0 auto;
+
+      &:hover:not(:disabled) {
+        color: var(--ink-main);
+        background-color: var(--overlay-hover);
+      }
+
+      &:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+
+      i {
+        font-size: 14px;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .btn-text {
+        display: inline-flex;
+        align-items: center;
+        line-height: 1;
+        white-space: nowrap;
+      }
+    }
+
+    &.toolbar-icon-only-mode .toolbar-btn .btn-text {
+      display: none;
+    }
+
+    &.toolbar-icon-only-mode .toolbar-btn {
+      width: 22px;
+      padding: 0;
+      gap: 0;
+    }
+
+    .toolbar-actions {
+      margin-left: auto;
+      display: flex;
+      gap: 12px;
+      flex: 0 0 auto;
+      flex-wrap: nowrap;
+    }
+  }
+
+  .editor-content {
+    /* 明确设置高度，减去工具栏(40px)和状态栏(32px) */
+    height: calc(100% - 40px - 32px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 40px 80px;
+    position: relative;
+
+    .editor-area-wrapper {
+      max-width: 768px;
+      margin: 0 auto;
+      position: relative;
+      transition: max-width 0.3s ease;
+
+      .chapter-title-input {
+        display: block;
+        width: 100%;
+        border: none;
+        outline: none;
+        background: transparent;
+        text-align: center;
+        margin-bottom: 30px;
+        /* 使用 CSS 变量，与编辑器字体保持一致 */
+        color: var(--editor-color, var(--ink-main));
+        font-size: var(--title-font-size, 24px);
+        font-weight: var(--editor-font-weight, 600);
+        font-family: var(--editor-font-family, system-ui, sans-serif);
+        transition:
+          font-size 0.2s ease,
+          font-weight 0.2s ease;
+
+        &::placeholder {
+          color: var(--ink-sec);
+          opacity: 0.5;
+        }
+      }
+
+      .editor-wrapper {
+        position: relative;
+        outline: none;
+        letter-spacing: 0.05em;
+        /* 让分隔线至少铺满可视区域（减去工具栏、状态栏、padding） */
+        min-height: calc(
+          100vh - var(--desktop-titlebar-height, 0px) - 40px - 32px - 80px -
+            80px - 32px
+        );
+
+        /* 确保 ProseMirror 继承 CSS 变量 */
+        :deep(.ProseMirror) {
+          /* 样式通过 CSS 变量继承，见 index.scss */
+          position: relative;
+          z-index: 1;
+          /* 让编辑器最小高度铺满容器，让分隔线完整显示 */
+          min-height: inherit;
+        }
+
+        &.webkit-caret-fix {
+          :deep(.ProseMirror) {
+            caret-color: transparent;
+          }
+        }
+
+        .webkit-editor-caret {
+          position: absolute;
+          z-index: 3;
+          width: 2px;
+          background: var(--editor-color, var(--ink-main));
+          border-radius: 2px;
+          pointer-events: none;
+          animation: webkitEditorCaretBlink 1s steps(1) infinite;
+        }
+
+        .custom-bubble-menu {
+          position: absolute;
+          z-index: 50;
+          display: flex;
+          padding: 0;
+          pointer-events: auto;
+          white-space: nowrap;
+
+          opacity: 0;
+          pointer-events: none;
+          transform: translateX(-50%) scale(0.95);
+          transform-origin: center bottom;
+          transition:
+            opacity 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+            transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+
+          &.is-visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(-50%) scale(1);
+          }
+        }
+
+        .editor-empty-hint {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          color: var(--ink-sec);
+          font-size: 14px;
+          gap: 8px;
+          pointer-events: none;
+
+          i {
+            font-size: 18px;
+          }
+
+          &.is-loading {
+            color: color-mix(in srgb, var(--ink-sec) 78%, transparent);
+          }
+        }
+      }
+    }
+  }
+
+}
+
+.ai-config-panel {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--ink-main);
+  min-width: 240px;
+
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 600;
+
+    small {
+      font-weight: 400;
+      color: var(--ink-sec);
+    }
+  }
+
+  .panel-divider {
+    height: 1px;
+    background: var(--divider);
+  }
+
+  .config-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    font-size: 13px;
+
+    &.column {
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .label {
+      color: var(--ink-sec);
+      font-weight: 500;
+    }
+
+    .model-select {
+      width: 100%;
+    }
+
+    .model-desc {
+      font-size: 12px;
+      margin: 0;
+      color: var(--ink-sec);
+    }
+  }
+
+  .config-desc {
+    font-size: 12px;
+    color: var(--ink-sec);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .key-tag {
+    font-size: 12px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: var(--overlay-hover);
+    color: var(--ink-main);
+  }
+}
+
+@keyframes webkitEditorCaretBlink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}
+
+:global(.ai-config-popper) {
+  background: var(--panel-bg, #111);
+  border: 1px solid var(--ui-border, rgba(255, 255, 255, 0.15));
+  border-radius: 16px;
+  padding: 0;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+:global(.ai-config-popper .el-popper__arrow::before) {
+  background: var(--panel-bg, #111);
+  border-color: var(--ui-border, rgba(255, 255, 255, 0.15));
+}
+
+/* 主题特定样式 */
+.theme-green .writing-editor,
+.theme-yellow .writing-editor {
+  .editor-content {
+    background: var(--editor-paper-bg);
+    backdrop-filter: blur(10px);
+  }
+}
+
+.theme-dark .writing-editor {
+  .editor-content .editor-area-wrapper {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  }
+}
+
+@media (max-width: 900px) {
+  :global(body.web-runtime .writing-editor .editor-toolbar .toolbar-scroll) {
+    padding: 0 10px 0 34px;
+  }
+
+  :global(body.web-runtime .writing-editor .editor-content) {
+    padding: 30px 32px 48px;
+  }
+
+  :global(
+    body.web-runtime .writing-editor .editor-content .editor-area-wrapper
+  ) {
+    max-width: min(100%, 720px);
+  }
+
+  :global(body.web-runtime .writing-editor .editor-status-bar) {
+    padding-inline: 8px 54px;
+  }
+}
+
+@media (max-width: 700px) {
+  :global(body.web-runtime .writing-editor .editor-content) {
+    padding-inline: 22px;
+  }
+
+  :global(body.web-runtime .writing-editor .editor-status-bar) {
+    padding-left: 6px;
+    gap: 4px;
+  }
+}
