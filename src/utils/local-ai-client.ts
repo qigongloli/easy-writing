@@ -27,6 +27,10 @@ const resolveAiFetch = async (): Promise<FetchLike> => {
   return window.fetch.bind(window)
 }
 
+/** 阿里 dashscope 接口：思考型千问模型走非流式必须显式关思考，否则服务端直接 400
+ *（官方要求 enable_thinking=false 或改用流式；按 baseUrl 判断，自定义填法也能盖住） */
+const isDashScope = (baseUrl: string) => String(baseUrl || '').includes('aliyuncs.com')
+
 /** baseUrl 与端点拼接：只负责去重斜杠，版本段（/v1 等）以用户填写为准 */
 export const joinAiUrl = (baseUrl: string, path: string) =>
   `${String(baseUrl || '').trim().replace(/\/+$/, '')}/${String(path).replace(/^\/+/, '')}`
@@ -118,6 +122,7 @@ export const testLocalAiModel = async (
           messages: [{ role: 'user', content: '连通性测试，请回复"ok"' }],
           max_tokens: 16,
           stream: false,
+          ...(isDashScope(baseUrl) ? { enable_thinking: false } : {}),
         }),
       })
     )
@@ -218,6 +223,7 @@ export const requestLocalChatCompletion = async (options: {
         max_tokens: options.maxTokens || model.maxOutputTokens || undefined,
         temperature: options.temperature,
         stream: false,
+        ...(isDashScope(model.baseUrl) ? { enable_thinking: false } : {}),
       }),
     })
     if (!response.ok) throw new Error(await readableHttpError(response))
