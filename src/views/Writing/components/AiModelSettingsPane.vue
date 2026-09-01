@@ -103,7 +103,7 @@
             <el-input v-model="form.baseUrl" size="small" maxlength="500" placeholder="https://api.example.com/v1" />
           </label>
           <label class="field">
-            <span>API Key<small class="key-local-hint">（只保存在本机，不会上传）</small></span>
+            <span>API Key<small class="key-local-hint">（只保存在本机；Ollama 等本地部署可留空）</small></span>
             <el-input
               v-model="form.apiKey"
               size="small"
@@ -433,6 +433,7 @@ const providerPresets: ProviderPreset[] = [
   { label: 'Gemini兼容', provider: 'gemini_openai', baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', icon: 'G', iconSrc: '/provider-icons/gemini.svg', description: 'Google 兼容接口' },
   { label: 'Claude', provider: 'claude', baseUrl: 'https://api.anthropic.com/v1', icon: 'C', iconSrc: '/provider-icons/claude.svg', description: 'Anthropic Claude 接口' },
   { label: 'xAI Grok', provider: 'xai', baseUrl: 'https://api.x.ai/v1', icon: 'X', iconSrc: '/provider-icons/xai.svg', description: 'xAI Grok 接口' },
+  { label: '本地部署', provider: 'local', baseUrl: 'http://127.0.0.1:11434/v1', icon: '家', description: 'Ollama / LM Studio 等本机服务，无需 API Key' },
   { label: '自定义', provider: 'custom', baseUrl: '', icon: '+', description: '自定义兼容接口' },
 ]
 
@@ -573,7 +574,7 @@ const saveModel = async () => {
 }
 
 const testCurrentModel = async () => {
-  if (!validateForm(true)) return
+  if (!validateForm()) return
   testingCurrent.value = true
   try {
     const { data } = await testUserAiModelApi(buildPayload())
@@ -765,7 +766,7 @@ const clearRemoteModels = () => {
   remoteModelPanelVisible.value = false
 }
 
-const validateForm = (forTest = false) => {
+const validateForm = () => {
   if (!form.name.trim()) {
     ElMessage.warning('请填写模型名称')
     return false
@@ -786,10 +787,7 @@ const validateForm = (forTest = false) => {
     ElMessage.warning('最大输出 Tokens 必须为 128 到最大上下文之间的整数')
     return false
   }
-  if (!editingId.value && !form.apiKey?.trim()) {
-    ElMessage.warning(forTest ? '测试前请填写 API Key' : '请填写 API Key')
-    return false
-  }
+  // 本地部署（Ollama/LM Studio 等）没有 Key，允许留空
   return true
 }
 

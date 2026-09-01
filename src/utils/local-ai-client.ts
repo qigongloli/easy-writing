@@ -75,6 +75,15 @@ export const buildChatBody = (params: {
   return body
 }
 
+/** 本地部署（Ollama/LM Studio 等）通常没有 API Key：留空则不带鉴权头 */
+const buildAuthHeaders = (apiKey: string | undefined, withJson = true): Record<string, string> => {
+  const headers: Record<string, string> = {}
+  if (withJson) headers['Content-Type'] = 'application/json'
+  const key = String(apiKey || '').trim()
+  if (key) headers.Authorization = `Bearer ${key}`
+  return headers
+}
+
 /** baseUrl 与端点拼接：只负责去重斜杠，版本段（/v1 等）以用户填写为准 */
 export const joinAiUrl = (baseUrl: string, path: string) =>
   `${String(baseUrl || '').trim().replace(/\/+$/, '')}/${String(path).replace(/^\/+/, '')}`
@@ -148,7 +157,6 @@ export const testLocalAiModel = async (
     data: { ok, message, latency: Date.now() - startedAt, url, testedAt: new Date().toISOString() },
   })
   if (!baseUrl) return result(false, '请先填写接口地址（BaseURL）')
-  if (!apiKey) return result(false, '请先填写 API Key')
   if (!modelCode) return result(false, '请先填写模型名称（modelCode）')
 
   try {
@@ -157,10 +165,7 @@ export const testLocalAiModel = async (
       aiFetch(url, {
         method: 'POST',
         signal,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-        },
+        headers: buildAuthHeaders(apiKey),
         body: JSON.stringify(
           buildChatBody({
             baseUrl,
@@ -236,7 +241,7 @@ export const requestLocalChatCompletion = async (options: {
 } & LocalAiSceneTag): Promise<string> => {
   const model = getLocalAiModelSecret(options.modelCode)
   if (!model) throw new Error(NO_MODEL_MESSAGE)
-  if (!model.apiKey || !model.baseUrl || !model.modelCode) {
+  if (!model.baseUrl || !model.modelCode) {
     throw new Error(`模型「${model.name}」配置不完整，请到模型管理检查`)
   }
   const startedAt = Date.now()
@@ -259,10 +264,7 @@ export const requestLocalChatCompletion = async (options: {
     const response = await aiFetch(joinAiUrl(model.baseUrl, 'chat/completions'), {
       method: 'POST',
       signal: controller.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${model.apiKey}`,
-      },
+      headers: buildAuthHeaders(model.apiKey),
       body: JSON.stringify(
         buildChatBody({
           baseUrl: model.baseUrl,
@@ -357,7 +359,7 @@ export const streamLocalChatCompletion = async (
     callbacks.onError(NO_MODEL_MESSAGE)
     return
   }
-  if (!model.apiKey || !model.baseUrl || !model.modelCode) {
+  if (!model.baseUrl || !model.modelCode) {
     callbacks.onError(`模型「${model.name}」配置不完整，请到模型管理检查`)
     return
   }
@@ -408,10 +410,7 @@ export const streamLocalChatCompletion = async (
     const response = await aiFetch(joinAiUrl(model.baseUrl, 'chat/completions'), {
       method: 'POST',
       signal: controller.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${model.apiKey}`,
-      },
+      headers: buildAuthHeaders(model.apiKey),
       body: JSON.stringify(
         buildChatBody({
           baseUrl: model.baseUrl,
@@ -513,7 +512,6 @@ export const listLocalAiRemoteModels = async (
   const url = joinAiUrl(baseUrl, 'models')
   const startedAt = Date.now()
   if (!baseUrl) throw new Error('请先填写接口地址（BaseURL）')
-  if (!apiKey) throw new Error('请先填写 API Key')
 
   try {
     const aiFetch = await resolveAiFetch()
@@ -521,7 +519,7 @@ export const listLocalAiRemoteModels = async (
       aiFetch(url, {
         method: 'GET',
         signal,
-        headers: { Authorization: `Bearer ${apiKey}` },
+        headers: buildAuthHeaders(apiKey, false),
       })
     )
     if (!response.ok) throw new Error(await readableHttpError(response))
@@ -580,7 +578,7 @@ export const generateLocalAiImageRequest = async (options: {
 } & LocalAiSceneTag): Promise<LocalAiImageResult> => {
   const model = getLocalAiModelSecret(options.modelCode)
   if (!model) throw new Error(NO_MODEL_MESSAGE)
-  if (!model.apiKey || !model.baseUrl || !model.modelCode) {
+  if (!model.baseUrl || !model.modelCode) {
     throw new Error(`模型「${model.name}」配置不完整，请到模型管理检查`)
   }
   const startedAt = Date.now()
@@ -615,10 +613,7 @@ export const generateLocalAiImageRequest = async (options: {
     const response = await aiFetch(joinAiUrl(model.baseUrl, 'images/generations'), {
       method: 'POST',
       signal: controller.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${model.apiKey}`,
-      },
+      headers: buildAuthHeaders(model.apiKey),
       body: JSON.stringify({
         model: model.modelCode,
         prompt: options.prompt,

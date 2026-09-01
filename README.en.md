@@ -23,7 +23,7 @@
 ## Why this app
 
 - **Your data, your disk**: books, worldbuilding notes and writing stats live in a local SQLite database, with scheduled automatic backups (txt + json) and one-click full export.
-- **Bring Your Own Key (BYOK)**: configure DeepSeek, Qwen, GLM, Kimi, OpenAI, or most services that expose an OpenAI-compatible API. Your key is stored locally, and requests go directly from your machine to the configured model provider.
+- **Bring Your Own Key (BYOK)**: configure DeepSeek, Qwen, GLM, Kimi, OpenAI, or most services that expose an OpenAI-compatible API. Your key is stored locally, and requests go directly from your machine to the configured model provider. Locally deployed models (Ollama, LM Studio, …) work too — just leave the API key empty.
 - **Fully open prompts**: every AI prompt is a local Markdown file you can edit in-app or with any editor, including per-scene sampling temperature.
 - **Free and open source** under AGPL-3.0.
 
