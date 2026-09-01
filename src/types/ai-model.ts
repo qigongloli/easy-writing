@@ -9,17 +9,10 @@ export interface AiModelOption {
   scene: 'text' | 'image' | string
   provider?: string
   description?: string
-  pointRate?: number
-  /** 展示费率：与服务端计费同口径（含全局倍率），文本按千Token、生图按次 */
-  displayCost?: number
-  displayCostUnit?: string
   protocol?: string
   baseUrl?: string
-  ownerType?: 'platform' | 'user'
+  ownerType?: 'user'
   isMine?: boolean
-  isVip?: boolean
-  // 会员专属且当前用户非会员：展示锁定态，选择时引导开通会员
-  vipLocked?: boolean
   isDefault?: boolean
   maxContext?: number
   maxOutputTokens?: number

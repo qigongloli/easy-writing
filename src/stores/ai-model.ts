@@ -15,11 +15,10 @@ const getOptionLabel = (model: AiModelOption) => {
 }
 
 const toSelectOptions = (models: AiModelOption[]) => [
-  { label: '智能推荐', value: '', vipLocked: false, description: '按场景自动选择合适的模型' },
+  { label: '智能推荐', value: '', description: '按场景自动选择合适的模型' },
   ...models.map(item => ({
     label: getOptionLabel(item),
     value: item.code,
-    vipLocked: false,
     description: String(item.modelCode || '').trim(),
   })),
 ]

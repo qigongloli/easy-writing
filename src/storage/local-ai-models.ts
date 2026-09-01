@@ -75,7 +75,6 @@ const toOption = (model: LocalAiModel): AiModelOption => ({
   baseUrl: model.baseUrl,
   ownerType: 'user',
   isMine: true,
-  vipLocked: false,
   maxContext: model.maxContext,
   maxOutputTokens: model.maxOutputTokens,
   status: model.status,

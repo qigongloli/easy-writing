@@ -1,5 +1,4 @@
 import type { JsonRecord } from '@/types/json'
-import { ReqPage } from "@/types";
 import type { WorkflowQualityNotice } from "./workflow";
 
 /**

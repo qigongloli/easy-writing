@@ -102,18 +102,12 @@ const formatContext = (tokens: number) => {
   return tokens >= 1000 ? `${Math.round(tokens / 1000)}K 上下文` : `${tokens} 上下文`
 }
 
-const getModelCost = (model: AiModelOption) => Number(model.displayCost ?? model.pointRate ?? 0)
-
+// 本地模型库全是用户自己的 Key（BYOK），没有平台计费概念
 const buildModelDescription = (model: AiModelOption) => {
-  if (model.ownerType === 'user') return 'BYOK · 不扣平台积分'
-  const parts: string[] = []
+  const parts: string[] = ['BYOK']
   const intro = String(model.description || '').trim()
   if (intro) parts.push(intro)
   else if (model.maxContext) parts.push(formatContext(Number(model.maxContext)))
-  const cost = getModelCost(model)
-  const unit = model.displayCostUnit || '千字'
-  // 服务端按真实计费口径折算，实扣随上下文长度浮动，展示带"约"
-  parts.push(cost > 0 ? `约${cost}积分/${unit}` : '免费使用')
   return parts.join(' · ')
 }
 
@@ -133,15 +127,12 @@ const options = computed<AiPreferenceOption[]>(() => {
     },
   ]
   models.value.forEach(model => {
-    const isCustom = model.ownerType === 'user'
-    const free = !isCustom && getModelCost(model) <= 0
     list.push({
       value: model.code,
       title: getOptionTitle(model),
       description: buildModelDescription(model),
-      tag: isCustom ? '自定义' : model.isVip ? '会员' : free ? '免费' : '',
-      tagKind: isCustom ? 'custom' : model.isVip ? 'vip' : free ? 'free' : 'plain',
-      locked: Boolean(model.vipLocked),
+      tag: '自定义',
+      tagKind: 'custom',
     })
   })
   return list

@@ -22,36 +22,6 @@ const formatByPattern = (date: Date, pattern: string) =>
     .replace(/mm/g, pad2(date.getMinutes()))
     .replace(/ss/g, pad2(date.getSeconds()))
 
-export interface FormatDateTimeOptions {
-  /** 输入为空（falsy）时返回的文案，默认 '-' */
-  emptyText?: string
-  /** 时间无效时返回的文案；缺省时回传原始输入（与旧实现一致） */
-  invalidText?: string
-}
-
-/**
- * 通用时间格式化：
- * - 空值（falsy）返回 emptyText（默认 '-'）
- * - 无效时间返回 invalidText；未指定时回传原始输入字符串
- */
-function formatDateTime(
-  value: DateInput,
-  pattern = 'YYYY-MM-DD HH:mm:ss',
-  options: FormatDateTimeOptions = {}
-): string {
-  const { emptyText = '-', invalidText } = options
-  if (!value) return emptyText
-  const date = toDate(value)
-  if (Number.isNaN(date.getTime())) {
-    return invalidText !== undefined ? invalidText : String(value)
-  }
-  return formatByPattern(date, pattern)
-}
-
-/**
- * 宽松版：不校验时间有效性，无效输入按 NaN 部件原样输出
- * （如 'NaN-NaN NaN:NaN'，保持旧实现行为），空值返回 emptyText。
- */
 export function formatDateTimeLoose(value: DateInput, pattern: string, emptyText = ''): string {
   if (!value) return emptyText
   return formatByPattern(toDate(value), pattern)

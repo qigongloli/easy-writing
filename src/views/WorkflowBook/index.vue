@@ -562,7 +562,6 @@ const buildWorkflowErrorMessage = (error: WorkflowFlowError, stepCode: WorkflowS
     MODEL_FORBIDDEN: '当前账号无权使用该模型，请重新选择。',
     CONTEXT_LIMIT: '当前输入超出模型上下文限制，请缩短内容或选择容量更大的模型。',
     OUTPUT_TRUNCATED: '模型输出被截断，本次不会使用该结果，请重新生成。',
-    INSUFFICIENT_POINTS: '当前积分不足，请充值后再试。',
     QUEUE_UNAVAILABLE: '生成队列暂不可用，请稍后重试。',
   }
   const hint = advice[errorCode]
