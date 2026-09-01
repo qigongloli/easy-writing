@@ -261,7 +261,6 @@ interface WorkflowStepErrorNoticeState {
   message: string
   errorCode: string
   errorReference: string
-  notCharged: boolean
   request?: { action: string; directions: string[]; ideaText: string }
 }
 const stepError = ref<WorkflowStepErrorNoticeState | null>(null)
@@ -593,14 +592,11 @@ const recordStepFailure = (
     step,
     visibleStepCode,
     title: `${step === 'inspiration' ? '灵感' : step === 'outline' ? '大纲' : '设定'}生成未完成`,
-    modelName: String(task?.modelName || task?.modelCode || '任务未记录模型'),
+    modelName: String(task?.modelName || task?.modelCode || '默认文字模型'),
     message,
     errorCode,
-    errorReference: String(task?.errorReference || `WF-${task?.id || draft.id}`),
-    // 大纲由多个独立调用组成，失败调用虽退款，之前完成的包装调用仍可能正常结算。
-    notCharged:
-      step !== 'outline' &&
-      ['EMPTY_OUTPUT', 'OUTPUT_INVALID', 'OUTPUT_TRUNCATED'].includes(errorCode),
+    // 本地任务 id 是负数，剥掉负号避免出现 "WF--" 观感
+    errorReference: String(task?.errorReference || `WF-${String(task?.id || draft.id).replace(/^-/, '')}`),
     request,
   }
   showWorkflowError(message)

@@ -37,9 +37,10 @@ const isDashScope = (baseUrl: string) => String(baseUrl || '').includes('aliyunc
 const isOpenAiOfficial = (baseUrl: string) => String(baseUrl || '').includes('api.openai.com')
 const isOpenAiReasoningModel = (modelCode: string) => /^(o\d|gpt-5)/i.test(String(modelCode || '').trim())
 
-// 非流式最少给足 1024 token 上限：思考型模型（Gemini flash 等）把思考计入
-// 输出上限，预算太小会被思考吃光、拿回空正文；上限只是护栏，普通模型不会因此多产出
-const NON_STREAM_MIN_TOKENS = 1024
+// 非流式最少给足 2048 token 上限：思考型模型（Gemini flash、DeepSeek flash 等）把
+// 思考计入输出上限，预算太小会被思考吃光，拿回空正文或半截 JSON（实测 1024 仍不够）；
+// 上限只是护栏，普通模型不会因此多产出
+const NON_STREAM_MIN_TOKENS = 2048
 
 /** 按供应商差异拼 chat/completions 请求体：三家怪癖集中在这一处 */
 export const buildChatBody = (params: {

@@ -18,6 +18,38 @@ const extractOuterObject = (source: string) => {
   return source.slice(start, end + 1)
 }
 
+/** 输出被 token 上限拦腰截断时，按扫描状态补上缺失的闭合（引号/括号）再试。
+ *  只做机械补全不猜内容：半截转义符去掉、悬空冒号补 null、悬空逗号删掉。 */
+const repairTruncatedJson = (source: string) => {
+  const start = source.indexOf('{')
+  if (start < 0) return ''
+  let inString = false
+  let escaped = false
+  const stack: string[] = []
+  for (let i = start; i < source.length; i += 1) {
+    const char = source[i]
+    if (inString) {
+      if (escaped) escaped = false
+      else if (char === '\\') escaped = true
+      else if (char === '"') inString = false
+      continue
+    }
+    if (char === '"') inString = true
+    else if (char === '{' || char === '[') stack.push(char)
+    else if (char === '}' || char === ']') stack.pop()
+  }
+  let repaired = source.slice(start)
+  if (escaped) repaired = repaired.slice(0, -1)
+  if (inString) repaired += '"'
+  const tail = repaired.replace(/\s+$/, '')
+  if (tail.endsWith(':')) repaired = `${tail}null`
+  else if (tail.endsWith(',')) repaired = tail.slice(0, -1)
+  for (let i = stack.length - 1; i >= 0; i -= 1) {
+    repaired += stack[i] === '{' ? '}' : ']'
+  }
+  return repaired
+}
+
 const findArrayStart = (source: string, key: string) => {
   const keyIndex = source.indexOf(`"${key}"`)
   if (keyIndex < 0) return -1
@@ -85,7 +117,15 @@ export const parseAiJson = (value: unknown, arrayKeys: string[] = []) => {
       try {
         return JSON.parse(outer)
       } catch {
-        // 最外层对象也不完整（多半被截断），落到下面按数组键抢救
+        // 最外层对象也不完整（多半被截断），先机械修复再试
+      }
+    }
+    const repaired = repairTruncatedJson(trimmed)
+    if (repaired) {
+      try {
+        return JSON.parse(repaired)
+      } catch {
+        // 修复失败，落到下面按数组键抢救完整对象
       }
     }
     const fallback = arrayKeys.reduce<Record<string, unknown[]>>((result, key) => {

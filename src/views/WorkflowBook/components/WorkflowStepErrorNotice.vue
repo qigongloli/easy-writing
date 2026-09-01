@@ -13,7 +13,6 @@
       <p>{{ notice.message }}</p>
       <dl>
         <div><dt>使用模型</dt><dd>{{ notice.modelName }}</dd></div>
-        <div><dt>积分</dt><dd>{{ notice.notCharged ? '失败调用未扣费' : '以积分流水为准' }}</dd></div>
         <div><dt>错误编号</dt><dd class="workflow-step-error__reference">{{ notice.errorReference }}</dd></div>
       </dl>
       <button class="workflow-step-error__retry" type="button" :disabled="generating" @click="$emit('retry')">
@@ -32,7 +31,6 @@ defineProps<{
     message: string
     errorCode: string
     errorReference: string
-    notCharged: boolean
   }
   generating?: boolean
 }>()

@@ -102,7 +102,12 @@ const generateStepContent = async (
       }),
       maxTokens: 600,
     })
-    const parsed = parseAiJson(data, ['ideaText'])
+    let parsed: { ideaText?: unknown } | null = null
+    try {
+      parsed = parseAiJson(data, ['ideaText'])
+    } catch {
+      throw new Error('灵感生成结果无法解析（多半是输出被截断），请重新生成或换个模型')
+    }
     const text = String(parsed?.ideaText || '').trim() || String(data || '').trim()
     if (!text) throw new Error('灵感生成结果为空，请重试')
     return { ideaText: text }
@@ -127,7 +132,7 @@ const generateStepContent = async (
     })
     const parsed = parseAiJson(data, ['titleOptions', 'volumes', 'chapters'])
     if (!parsed || (!Array.isArray(parsed.chapters) && !Array.isArray(parsed.volumes))) {
-      throw new Error('大纲生成结果无法解析，请重试')
+      throw new Error('大纲生成结果无法解析（输出被截断或格式不对），请重新生成或换个模型')
     }
     return parsed
   }
@@ -159,7 +164,7 @@ const generateStepContent = async (
   })
   const parsed = parseAiJson(data, ['worldCards', 'characters'])
   if (!parsed || (!Array.isArray(parsed.characters) && !Array.isArray(parsed.worldCards))) {
-    throw new Error('设定生成结果无法解析，请重试')
+    throw new Error('设定生成结果无法解析（输出被截断或格式不对），请重新生成或换个模型')
   }
   return parsed
 }
