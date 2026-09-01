@@ -3,6 +3,7 @@ import type {
   UserAiModelTestResult,
   UserAiRemoteModelListResult,
 } from '@/types/user-ai-model'
+import { createThinkStreamFilter, stripThinkBlocks } from '@/utils/ai-think-filter'
 import { getLocalAiModelSecret, localAiModelCode, type LocalAiModel } from '@/storage/local-ai-models'
 import { appendLocalAiRecord, estimateTokens } from '@/storage/local-ai-records'
 import { isTauriRuntime } from '@/storage'
@@ -30,6 +31,48 @@ const resolveAiFetch = async (): Promise<FetchLike> => {
 /** 阿里 dashscope 接口：思考型千问模型走非流式必须显式关思考，否则服务端直接 400
  *（官方要求 enable_thinking=false 或改用流式；按 baseUrl 判断，自定义填法也能盖住） */
 const isDashScope = (baseUrl: string) => String(baseUrl || '').includes('aliyuncs.com')
+
+// OpenAI 官方接口的两个换代差异（其余兼容渠道仍认老字段）：
+// token 上限字段改名 max_completion_tokens；推理系（o*/gpt-5*）只认默认温度
+const isOpenAiOfficial = (baseUrl: string) => String(baseUrl || '').includes('api.openai.com')
+const isOpenAiReasoningModel = (modelCode: string) => /^(o\d|gpt-5)/i.test(String(modelCode || '').trim())
+
+// 非流式最少给足 1024 token 上限：思考型模型（Gemini flash 等）把思考计入
+// 输出上限，预算太小会被思考吃光、拿回空正文；上限只是护栏，普通模型不会因此多产出
+const NON_STREAM_MIN_TOKENS = 1024
+
+/** 按供应商差异拼 chat/completions 请求体：三家怪癖集中在这一处 */
+export const buildChatBody = (params: {
+  baseUrl: string
+  modelCode: string
+  messages: LocalChatMessageInput[]
+  maxTokens?: number
+  temperature?: number
+  stream: boolean
+}): Record<string, unknown> => {
+  const body: Record<string, unknown> = {
+    model: params.modelCode,
+    messages: params.messages,
+    stream: params.stream,
+  }
+  const maxTokens = params.stream
+    ? params.maxTokens
+    : params.maxTokens
+      ? Math.max(params.maxTokens, NON_STREAM_MIN_TOKENS)
+      : undefined
+  if (maxTokens) {
+    body[isOpenAiOfficial(params.baseUrl) ? 'max_completion_tokens' : 'max_tokens'] = maxTokens
+  }
+  const dropTemperature = isOpenAiOfficial(params.baseUrl) && isOpenAiReasoningModel(params.modelCode)
+  if (params.temperature !== undefined && !dropTemperature) {
+    body.temperature = params.temperature
+  }
+  // 阿里 dashscope：思考型千问走非流式必须显式关思考，否则服务端直接 400
+  if (!params.stream && isDashScope(params.baseUrl)) {
+    body.enable_thinking = false
+  }
+  return body
+}
 
 /** baseUrl 与端点拼接：只负责去重斜杠，版本段（/v1 等）以用户填写为准 */
 export const joinAiUrl = (baseUrl: string, path: string) =>
@@ -117,13 +160,15 @@ export const testLocalAiModel = async (
           'Content-Type': 'application/json',
           Authorization: `Bearer ${apiKey}`,
         },
-        body: JSON.stringify({
-          model: modelCode,
-          messages: [{ role: 'user', content: '连通性测试，请回复"ok"' }],
-          max_tokens: 16,
-          stream: false,
-          ...(isDashScope(baseUrl) ? { enable_thinking: false } : {}),
-        }),
+        body: JSON.stringify(
+          buildChatBody({
+            baseUrl,
+            modelCode,
+            messages: [{ role: 'user', content: '连通性测试，请回复"ok"' }],
+            maxTokens: 16,
+            stream: false,
+          })
+        ),
       })
     )
     if (!response.ok) return result(false, await readableHttpError(response))
@@ -217,19 +262,22 @@ export const requestLocalChatCompletion = async (options: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${model.apiKey}`,
       },
-      body: JSON.stringify({
-        model: model.modelCode,
-        messages: options.messages,
-        max_tokens: options.maxTokens || model.maxOutputTokens || undefined,
-        temperature: options.temperature,
-        stream: false,
-        ...(isDashScope(model.baseUrl) ? { enable_thinking: false } : {}),
-      }),
+      body: JSON.stringify(
+        buildChatBody({
+          baseUrl: model.baseUrl,
+          modelCode: model.modelCode,
+          messages: options.messages,
+          maxTokens: options.maxTokens || model.maxOutputTokens || undefined,
+          temperature: options.temperature,
+          stream: false,
+        })
+      ),
     })
     if (!response.ok) throw new Error(await readableHttpError(response))
     const body = await response.json()
     if (body?.error?.message) throw new Error(String(body.error.message))
-    const content = String(body?.choices?.[0]?.message?.content || '').trim()
+    // 剥掉部分渠道内联进 content 的 <think> 思考段，只留真正文
+    const content = stripThinkBlocks(String(body?.choices?.[0]?.message?.content || '')).trim()
     recordAiCall({
       recordType: 'text',
       tag: options,
@@ -363,13 +411,16 @@ export const streamLocalChatCompletion = async (
         'Content-Type': 'application/json',
         Authorization: `Bearer ${model.apiKey}`,
       },
-      body: JSON.stringify({
-        model: model.modelCode,
-        messages: options.messages,
-        max_tokens: model.maxOutputTokens || undefined,
-        temperature: options.temperature,
-        stream: true,
-      }),
+      body: JSON.stringify(
+        buildChatBody({
+          baseUrl: model.baseUrl,
+          modelCode: model.modelCode,
+          messages: options.messages,
+          maxTokens: model.maxOutputTokens || undefined,
+          temperature: options.temperature,
+          stream: true,
+        })
+      ),
     })
     if (!response.ok) {
       const message = await readableHttpError(response)
@@ -384,6 +435,8 @@ export const streamLocalChatCompletion = async (
 
     const reader = response.body.getReader()
     const decoder = new TextDecoder('utf-8')
+    // 渠道可能把 <think> 思考段内联进增量正文，跨分片过滤后再吐给调用方
+    const thinkFilter = createThinkStreamFilter()
     let buffer = ''
     let finished = false
     while (true) {
@@ -411,14 +464,22 @@ export const streamLocalChatCompletion = async (
           }
           const delta = chunk?.choices?.[0]?.delta?.content
           if (typeof delta === 'string' && delta) {
-            collected += delta
-            callbacks.onDelta(delta)
+            const visible = thinkFilter.push(delta)
+            if (visible) {
+              collected += visible
+              callbacks.onDelta(visible)
+            }
           }
         } catch {
           // 跨分片被截断的 JSON 行极少见（按 \n 切已规避大半），忽略无法解析的行
         }
       }
       if (finished) break
+    }
+    const tail = thinkFilter.finish()
+    if (tail) {
+      collected += tail
+      callbacks.onDelta(tail)
     }
     recordStream(1)
     callbacks.onDone()
