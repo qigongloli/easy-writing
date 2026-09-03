@@ -4,14 +4,12 @@
     :style="{ width: collapsed ? '0' : `${editorStore.sidebarWidth}px` }">
     <!-- 拖拽手柄 -->
     <div class="resize-handle" @mousedown="startResize" :class="{ active: isResizing }"></div>
-
     <!-- 收起/展开按钮 -->
     <div class="toggle-button-wrapper">
       <button class="toggle-button" @click="toggleSidebar">
         <i :class="['fa-solid', collapsed ? 'fa-chevron-right' : 'fa-chevron-left']"></i>
       </button>
     </div>
-
     <div v-show="!collapsed" class="sidebar-content">
       <!-- 搜索框 -->
       <div class="search-section">
@@ -21,13 +19,11 @@
           <i v-else class="fa-solid fa-xmark search-icon clear-icon" @click="searchText = ''" title="清除搜索"></i>
         </div>
       </div>
-
       <!-- 新建按钮 -->
       <div v-if="!isCatalogStructureLocked" class="create-buttons">
         <button class="btn-primary create-btn" @click="handleCreateChapterBtn">新建章</button>
         <button class="btn-outline create-btn" @click="handleCreateVolumeBtn">新建卷</button>
       </div>
-
       <!-- 目录标题 -->
       <div class="catalog-header">
         <span>目录</span>
@@ -44,7 +40,6 @@ v-if="!isCatalogStructureLocked" class="fa-solid fa-arrow-down-short-wide action
             @click.stop="handleSortClick"></i>
         </div>
       </div>
-
       <!-- 目录列表 -->
       <div class="catalog-list" @dragover.prevent>
         <!-- 目录拉取期间用骨架占位：空白目录配上编辑区那句「请选择左侧章节」，
@@ -52,13 +47,11 @@ v-if="!isCatalogStructureLocked" class="fa-solid fa-arrow-down-short-wide action
         <div v-if="catalogLoading && !catalogItems.length" class="catalog-skeleton" aria-label="目录加载中">
           <div v-for="row in 6" :key="row" class="catalog-skeleton-row" :class="{ 'is-chapter': row % 3 !== 1 }"></div>
         </div>
-
         <!-- 无搜索结果提示 -->
         <div v-else-if="searchText && filteredCatalogItems.length === 0" class="no-results">
           <i class="fa-solid fa-magnifying-glass"></i>
           <p>未找到匹配的章节或卷</p>
         </div>
-
         <div v-for="(volume, vIndex) in filteredCatalogItems" :key="volume.id" class="volume-group">
           <!-- 卷标题 -->
           <div
@@ -71,7 +64,6 @@ class="catalog-item" :class="{
             <i :class="['fa-regular', volume.open ? 'fa-folder-open' : 'fa-folder']"></i>
             <!-- eslint-disable-next-line vue/no-v-html -- highlightText 先 escapeHtml 再包高亮标签，无注入面 -->
             <span class="item-title" v-html="highlightText(volume.title)"></span>
-
             <div class="item-actions">
               <span class="chapter-count">{{ volume.children?.length || 0 }}章</span>
               <div class="action-buttons">
@@ -84,7 +76,6 @@ class="fa-solid fa-ellipsis action-btn" title="更多"
               </div>
             </div>
           </div>
-
           <!-- 章节列表 -->
           <div v-if="volume.open" class="chapter-list">
             <div
@@ -99,7 +90,6 @@ v-for="(chapter, cIndex) in volume.children" :key="chapter.id" class="catalog-it
               @dragstart.stop="onDragStart($event, { type: 'chapter', vIndex: vIndex, cIndex: cIndex, item: chapter })"
               @drop.stop="onDrop($event, { type: 'chapter', vIndex: vIndex, cIndex: cIndex, item: chapter })"
               @dragover.prevent>
-
               <template v-if="editingChapterId === chapter.id">
                 <input
 ref="editInputRef" type="text" v-model="editingTitle" class="edit-input"
@@ -120,7 +110,6 @@ v-if="getChapterStatusLabel(chapter)" class="chapter-workflow-status"
         </div>
       </div>
     </div>
-
     <!-- 卷操作下拉菜单 -->
     <div
 v-if="contextMenu.visible" class="context-menu"
@@ -144,7 +133,6 @@ v-if="contextMenu.visible" class="context-menu"
         <div class="menu-item danger" @click="handleMenuAction('delete')">删除本卷</div>
       </template>
     </div>
-
     <!-- 导入导出菜单 -->
     <div
 v-if="importExportMenu.visible" class="context-menu"
@@ -152,7 +140,6 @@ v-if="importExportMenu.visible" class="context-menu"
       <div v-if="!isCatalogStructureLocked" class="menu-item" @click="handleImportExportAction('import')">导入</div>
       <div class="menu-item" @click="handleImportExportAction('export')">导出</div>
     </div>
-
     <!-- 排序菜单 -->
     <div
 v-if="sortMenu.visible && !isCatalogStructureLocked" class="context-menu"
@@ -163,7 +150,6 @@ v-if="sortMenu.visible && !isCatalogStructureLocked" class="context-menu"
       <div class="menu-item" @click="handleSortAction('all_title')">全书章节按章节号排序</div>
       <div class="menu-item" @click="handleSortAction('volume_title')">分卷按卷号排序</div>
     </div>
-
     <!-- 章节右键菜单 -->
     <div
 v-if="chapterContextMenu.visible" class="context-menu"
@@ -190,7 +176,6 @@ v-if="chapterContextMenu.visible" class="context-menu"
         <div class="menu-item danger" @click="handleChapterMenuAction('delete')">删除本章</div>
       </template>
     </div>
-
     <CreateVolumeModal
 v-if="!isCatalogStructureLocked" v-model:visible="createVolumeVisible"
       :initial-data="editingVolume ? { title: editingVolume.title, summary: editingVolume.summary || '' } : undefined"
@@ -203,7 +188,6 @@ v-if="canEditChapterMetadata" v-model:visible="createChapterVisible" :initial-da
       summary: editingChapter.summary || '',
       wordCount: editingChapter.wordCount
     } : undefined" :volumes="editableChapterVolumes" :selected-volume-id="selectedVolumeId" @save="handleCreateChapterSave" />
-
     <ImportChaptersModal
       v-if="!isCatalogStructureLocked"
       v-model:visible="importChaptersVisible"
@@ -230,7 +214,6 @@ v-if="canEditChapterMetadata" v-model:visible="createChapterVisible" :initial-da
     />
   </aside>
 </template>
-
 <script setup lang="ts">
 import { ref, onUnmounted, nextTick, onMounted, computed, watch } from 'vue'
 import { promptText } from '@/storage/local-prompts'
@@ -252,9 +235,7 @@ import { getLocalChapterDetailData } from '@/storage/local-reference'
 import { showApiError } from '@/utils/api-error'
 import { ElMessage } from 'element-plus'
 import { inkConfirm } from '@/utils/ink-confirm'
-import { isTauriRuntime } from '@/storage'
 import { getLocalLibraryStorage } from '@/storage/local-library'
-
 const route = useRoute()
 const editorStore = useWritingEditorStore()
 const aiModelStore = useAiModelStore()
@@ -262,7 +243,6 @@ const { chapterWordCount, activeChapterTitle } = storeToRefs(editorStore)
 const bookId = ref<string>('')
 // 首次拉取目录前默认为 true：进入页面的第一帧就该是骨架，而不是空目录。
 const catalogLoading = ref(true)
-
 interface Chapter {
   id: number
   volumeId: string
@@ -278,7 +258,6 @@ interface Chapter {
   selectable?: boolean
   workflowStatus?: 'planned' | 'generating' | 'review_required' | 'completed' | string
 }
-
 interface Volume {
   id: number
   createTime: string
@@ -293,7 +272,6 @@ interface Volume {
   children: Chapter[]
   open?: boolean // UI state
 }
-
 const props = defineProps<{
   beforeSwitchChapter?: (chapter: Chapter) => Promise<boolean> | boolean
   workflowMode?: boolean
@@ -304,13 +282,11 @@ const props = defineProps<{
   workflowRestoreLockedChapterId?: number
   workflowStopped?: boolean
 }>()
-
 // 目录加载态要上抛：编辑区那句「请选择左侧章节开始创作」得等目录出来再显示，
 // 否则目录还在拉取时就先断言"这本书没有章节"。
 const emit = defineEmits<{
   (event: 'catalog-loading', loading: boolean): void
 }>()
-
 const localLibrary = getLocalLibraryStorage()
 const isVerifiedWorkflowCatalog = computed(
   () =>
@@ -318,7 +294,6 @@ const isVerifiedWorkflowCatalog = computed(
     Number(props.workflowRunId || 0) > 0 &&
     Number(props.workflowTaskId || 0) > 0
 )
-
 // 只有活动生成任务持有目录结构；暂停、失败和完成后恢复普通章节操作。
 const isCatalogStructureLocked = computed(
   () =>
@@ -328,7 +303,6 @@ const isCatalogStructureLocked = computed(
 const canEditChapterMetadata = computed(
   () => !isCatalogStructureLocked.value || props.workflowStopped === true
 )
-
 // 拖拽相关类型
 interface DragData {
   type: 'volume' | 'chapter'
@@ -337,31 +311,26 @@ interface DragData {
   cIndex?: number // chapter index
   item: Volume | Chapter
 }
-
 const collapsed = ref(false)
 const searchText = ref('')
 const activeId = ref<number | null>(editorStore.activeChapterId ?? null)
 const activeType = ref<'volume' | 'chapter' | null>(activeId.value ? 'chapter' : null)
 const draggedItem = ref<DragData | null>(null)
-
+// 窄屏（手机/平板竖屏）自动收起侧栏：无论桌面 Tauri 还是移动端 Tauri / Web 都生效。
 const isWebCompactWriting = () =>
-  typeof window !== 'undefined' && !isTauriRuntime() && window.matchMedia('(max-width: 900px)').matches
-
+  typeof window !== 'undefined' && window.matchMedia('(max-width: 900px)').matches
 // 新建/编辑卷弹窗
 const createVolumeVisible = ref(false)
 const editingVolume = ref<Volume | null>(null)
-
 const handleCreateVolumeBtn = () => {
   if (isCatalogStructureLocked.value) return
   editingVolume.value = null
   createVolumeVisible.value = true
 }
-
 // 新建/编辑章节弹窗
 const createChapterVisible = ref(false)
 const editingChapter = ref<Chapter | null>(null)
 const selectedVolumeId = ref<string | number>('')
-
 const handleCreateChapterSave = async (data: { volumeId: string | number; title: string; summary: string; wordCount: number }) => {
   if (!canEditChapterMetadata.value || (isCatalogStructureLocked.value && !editingChapter.value)) return
   try {
@@ -388,7 +357,6 @@ const handleCreateChapterSave = async (data: { volumeId: string | number; title:
       })
       ElMessage.success('新建成功')
       await loadCatalogTree()
-
       // 自动选中新章节 (需要重新加载后才能获取到新ID)
       const volume = catalogItems.value.find(v => String(v.id) === String(data.volumeId))
       if (volume && volume.children.length > 0) {
@@ -401,7 +369,6 @@ const handleCreateChapterSave = async (data: { volumeId: string | number; title:
     showApiError(error, '操作失败')
   }
 }
-
 const handleCreateVolumeSave = async (data: { title: string, summary: string }) => {
   if (isCatalogStructureLocked.value) return
   try {
@@ -421,7 +388,6 @@ const handleCreateVolumeSave = async (data: { title: string, summary: string }) 
         const existingTitles = catalogItems.value.map(v => v.title)
         finalTitle = generateNextVolumeTitle(existingTitles)
       }
-
       await localLibrary.createLocalVolume({
         bookId: bookId.value,
         title: finalTitle,
@@ -429,7 +395,6 @@ const handleCreateVolumeSave = async (data: { title: string, summary: string }) 
       })
       ElMessage.success('新建成功')
       await loadCatalogTree()
-
       // 滚动到底部
       nextTick(() => {
         const list = document.querySelector('.catalog-list')
@@ -443,12 +408,10 @@ const handleCreateVolumeSave = async (data: { title: string, summary: string }) 
     showApiError(error, '操作失败')
   }
 }
-
 // 章节重命名
 const editingChapterId = ref<number | null>(null)
 const editingTitle = ref('')
 const editInputRef = ref<HTMLInputElement | null>(null)
-
 const startEdit = (chapter: Chapter) => {
   if (!canEditChapterMetadata.value) return
   if (chapter.isPlanned || chapter.selectable === false) return
@@ -463,7 +426,6 @@ const startEdit = (chapter: Chapter) => {
     }
   })
 }
-
 const saveEdit = async (chapter: Chapter) => {
   if (!canEditChapterMetadata.value) {
     editingChapterId.value = null
@@ -471,7 +433,6 @@ const saveEdit = async (chapter: Chapter) => {
     return
   }
   if (editingChapterId.value === null) return
-
   const newTitle = editingTitle.value.trim()
   if (newTitle && newTitle !== chapter.title) {
     try {
@@ -489,16 +450,13 @@ const saveEdit = async (chapter: Chapter) => {
       showApiError(error, '重命名失败')
     }
   }
-
   editingChapterId.value = null
   editingTitle.value = ''
 }
-
 const cancelEdit = () => {
   editingChapterId.value = null
   editingTitle.value = ''
 }
-
 // 卷菜单逻辑
 const contextMenu = ref({
   visible: false,
@@ -506,7 +464,6 @@ const contextMenu = ref({
   y: 0,
   volume: null as Volume | null
 })
-
 const handleVolumeMore = (volume: Volume, event?: MouseEvent) => {
   if (event) {
     const rect = (event.target as HTMLElement).getBoundingClientRect()
@@ -525,16 +482,13 @@ const handleVolumeMore = (volume: Volume, event?: MouseEvent) => {
       volume
     }
   }
-
   // 点击外部关闭
   document.addEventListener('click', closeContextMenu)
 }
-
 const closeContextMenu = () => {
   contextMenu.value.visible = false
   document.removeEventListener('click', closeContextMenu)
 }
-
 const handleMenuAction = async (action: string) => {
   const volume = contextMenu.value.volume
   if (!volume) return
@@ -542,7 +496,6 @@ const handleMenuAction = async (action: string) => {
     closeContextMenu()
     return
   }
-
   try {
     switch (action) {
       case 'rename':
@@ -569,25 +522,20 @@ const handleMenuAction = async (action: string) => {
       showApiError(error, '操作失败')
     }
   }
-
   closeContextMenu()
 }
-
 const getVolumeWordCount = (volume: Volume | null) => {
   if (!volume || !volume.children) return 0
   return volume.children.reduce((sum, chapter) => sum + (chapter.wordCount || 0), 0).toLocaleString()
 }
-
 const findVolumeById = (volumeId: number | null) => {
   if (volumeId == null) return null
   return catalogItems.value.find(volume => volume.id === volumeId) || null
 }
-
 const findVolumeByChapterId = (chapterId: number | null) => {
   if (chapterId == null) return null
   return catalogItems.value.find(volume => volume.children.some(chapter => chapter.id === chapterId)) || null
 }
-
 const getActiveVolume = () => {
   if (activeType.value === 'volume') {
     return findVolumeById(activeId.value)
@@ -597,7 +545,6 @@ const getActiveVolume = () => {
   }
   return null
 }
-
 const deleteVolume = async (volume: Volume) => {
   if (isCatalogStructureLocked.value) return
   await inkConfirm(
@@ -613,7 +560,6 @@ const deleteVolume = async (volume: Volume) => {
   ElMessage.success('删除成功')
   await loadCatalogTree()
 }
-
 const deleteChapter = async (chapter: Chapter) => {
   if (isCatalogStructureLocked.value) return
   await inkConfirm(
@@ -629,14 +575,12 @@ const deleteChapter = async (chapter: Chapter) => {
   ElMessage.success('删除成功')
   await loadCatalogTree()
 }
-
 const handleDeleteSelected = async () => {
   if (isCatalogStructureLocked.value) return
   closeContextMenu()
   closeChapterContextMenu()
   closeImportExportMenu()
   closeSortMenu()
-
   try {
     if (activeType.value === 'volume') {
       const volume = findVolumeById(activeId.value)
@@ -647,7 +591,6 @@ const handleDeleteSelected = async () => {
       await deleteVolume(volume)
       return
     }
-
     if (activeType.value === 'chapter') {
       const chapter = findChapterInCatalog(activeId.value)
       if (!chapter) {
@@ -657,7 +600,6 @@ const handleDeleteSelected = async () => {
       await deleteChapter(chapter)
       return
     }
-
     ElMessage.warning('请先选择要删除的章节或分卷')
   } catch (error) {
     if (error !== 'cancel') {
@@ -666,14 +608,12 @@ const handleDeleteSelected = async () => {
     }
   }
 }
-
 // 导入导出菜单逻辑
 const importExportMenu = ref({
   visible: false,
   x: 0,
   y: 0
 })
-
 const handleImportExportClick = (event: MouseEvent) => {
   closeSortMenu()
   const rect = (event.target as HTMLElement).getBoundingClientRect()
@@ -684,12 +624,10 @@ const handleImportExportClick = (event: MouseEvent) => {
   }
   document.addEventListener('click', closeImportExportMenu)
 }
-
 const closeImportExportMenu = () => {
   importExportMenu.value.visible = false
   document.removeEventListener('click', closeImportExportMenu)
 }
-
 const handleImportExportAction = (action: 'import' | 'export') => {
   if (isCatalogStructureLocked.value && action === 'import') {
     closeImportExportMenu()
@@ -702,15 +640,12 @@ const handleImportExportAction = (action: 'import' | 'export') => {
   }
   closeImportExportMenu()
 }
-
 type SortAction = 'current_title' | 'current_create' | 'all_title' | 'volume_title'
-
 const sortMenu = ref({
   visible: false,
   x: 0,
   y: 0
 })
-
 const handleSortClick = (event: MouseEvent) => {
   if (isCatalogStructureLocked.value) return
   closeContextMenu()
@@ -724,27 +659,21 @@ const handleSortClick = (event: MouseEvent) => {
   }
   document.addEventListener('click', closeSortMenu)
 }
-
 const closeSortMenu = () => {
   sortMenu.value.visible = false
   document.removeEventListener('click', closeSortMenu)
 }
-
 const titleCollator = new Intl.Collator('zh-CN', {
   numeric: true,
   sensitivity: 'base'
 })
-
 const getOrdinalInTitle = (title: string, unit: '章' | '卷') => {
   const arabicMatch = title.match(new RegExp(`第\\s*(\\d+)\\s*${unit}`))
   if (arabicMatch) return Number(arabicMatch[1])
-
   const chineseMatch = title.match(new RegExp(`第\\s*([零一二三四五六七八九十百千万]+)\\s*${unit}`))
   if (chineseMatch) return chineseToNumber(chineseMatch[1])
-
   return Number.POSITIVE_INFINITY
 }
-
 const compareTitleByOrdinal = (unit: '章' | '卷') => {
   return (a: { title: string; sortNo?: number }, b: { title: string; sortNo?: number }) => {
     const aOrdinal = getOrdinalInTitle(a.title, unit)
@@ -755,10 +684,8 @@ const compareTitleByOrdinal = (unit: '章' | '卷') => {
     return titleCollator.compare(a.title, b.title) || Number(a.sortNo || 0) - Number(b.sortNo || 0)
   }
 }
-
 const hasChapterOrdinal = (title: string) =>
   /^第[0-9一二三四五六七八九十百千万零〇两]+[章节回]/.test(String(title || '').trim())
-
 const formatChapterDisplayTitle = (chapter: Chapter | null) => {
   if (!chapter) return ''
   const title = String(chapter.title || '').trim() || '未命名章节'
@@ -767,7 +694,6 @@ const formatChapterDisplayTitle = (chapter: Chapter | null) => {
   // 工作流旧建书标题可能只存事件名，目录展示层补齐章节序号。
   return sortNo > 0 ? `第${sortNo}章 ${title}` : title
 }
-
 const getChapterStatusLabel = (chapter: Chapter) => {
   if (!isVerifiedWorkflowCatalog.value) return ''
   if (chapter.isPlanned || chapter.selectable === false || chapter.workflowStatus === 'planned') return '待生成'
@@ -776,19 +702,15 @@ const getChapterStatusLabel = (chapter: Chapter) => {
   if (chapter.workflowStatus === 'incomplete') return '未完成'
   return ''
 }
-
 const isVirtualWorkflowChapter = (chapter: Chapter) =>
   chapter.isPlanned === true || chapter.selectable === false
-
 const getPersistedChapterIds = (chapters: Chapter[]) =>
   chapters.filter(chapter => !isVirtualWorkflowChapter(chapter)).map(chapter => chapter.id)
-
 const getTimeValue = (value?: string) => {
   if (!value) return 0
   const time = new Date(value).getTime()
   return Number.isFinite(time) ? time : 0
 }
-
 const sortChaptersInVolume = async (
   volume: Volume,
   compare: (a: Chapter, b: Chapter) => number,
@@ -803,7 +725,6 @@ const sortChaptersInVolume = async (
     ElMessage.warning('含待生成章节时暂不支持目录排序')
     return false
   }
-
   volume.children = [...volume.children].sort(compare)
   await localLibrary.sortLocalChapters({
     chapterIds: getPersistedChapterIds(volume.children),
@@ -811,7 +732,6 @@ const sortChaptersInVolume = async (
   })
   return true
 }
-
 const handleSortAction = async (action: SortAction) => {
   if (isCatalogStructureLocked.value) {
     closeSortMenu()
@@ -877,7 +797,6 @@ const handleSortAction = async (action: SortAction) => {
     closeSortMenu()
   }
 }
-
 // 章节右键菜单逻辑
 const chapterContextMenu = ref({
   visible: false,
@@ -885,7 +804,6 @@ const chapterContextMenu = ref({
   y: 0,
   chapter: null as Chapter | null
 })
-
 const handleChapterContextMenu = (event: MouseEvent, chapter: Chapter) => {
   if (chapter.isPlanned || chapter.selectable === false) return
   chapterContextMenu.value = {
@@ -896,12 +814,10 @@ const handleChapterContextMenu = (event: MouseEvent, chapter: Chapter) => {
   }
   document.addEventListener('click', closeChapterContextMenu)
 }
-
 const closeChapterContextMenu = () => {
   chapterContextMenu.value.visible = false
   document.removeEventListener('click', closeChapterContextMenu)
 }
-
 const handleChapterMenuAction = async (action: string) => {
   const chapter = chapterContextMenu.value.chapter
   if (!chapter) return
@@ -919,7 +835,6 @@ const handleChapterMenuAction = async (action: string) => {
     closeChapterContextMenu()
     return
   }
-
   try {
     switch (action) {
       case 'open_sidebar':
@@ -954,35 +869,29 @@ const handleChapterMenuAction = async (action: string) => {
       showApiError(error, '操作失败')
     }
   }
-
   closeChapterContextMenu()
 }
-
 // 宽度拖拽逻辑
 const isResizing = ref(false)
 const startX = ref(0)
 const startWidth = ref(0)
-
 const startResize = (e: MouseEvent) => {
   if (collapsed.value) return
   e.preventDefault()
   isResizing.value = true
   startX.value = e.clientX
   startWidth.value = editorStore.sidebarWidth
-
   document.addEventListener('mousemove', doResize)
   document.addEventListener('mouseup', stopResize)
   document.body.style.userSelect = 'none'
   document.body.style.cursor = 'col-resize'
 }
-
 const doResize = (e: MouseEvent) => {
   if (!isResizing.value) return
   const delta = e.clientX - startX.value
   const newWidth = Math.max(WRITING_SIDEBAR_MIN_WIDTH, Math.min(WRITING_SIDEBAR_MAX_WIDTH, startWidth.value + delta))
   editorStore.setSidebarWidth(newWidth)
 }
-
 const stopResize = () => {
   isResizing.value = false
   document.removeEventListener('mousemove', doResize)
@@ -990,11 +899,9 @@ const stopResize = () => {
   document.body.style.userSelect = ''
   document.body.style.cursor = ''
 }
-
 onUnmounted(() => {
   stopResize()
 })
-
 const catalogItems = ref<Volume[]>([])
 let catalogLoadRevision = 0
 const editableChapterVolumes = computed(() => {
@@ -1003,14 +910,12 @@ const editableChapterVolumes = computed(() => {
     volume => String(volume.id) === String(editingChapter.value?.volumeId)
   )
 })
-
 const importChaptersVisible = ref(false)
 const exportChaptersVisible = ref(false)
 const exportChaptersMode = ref<'batch' | 'merge'>('batch')
 const exportPreselectedChapterIds = ref<number[]>([])
 const chapterHistoryVisible = ref(false)
 const historyChapter = ref<Chapter | null>(null)
-
 watch([isCatalogStructureLocked, canEditChapterMetadata], ([locked, chapterEditable]) => {
   if (!locked) return
   // 锁定工作流结构时关闭残留操作；恢复生成后还要同步收回章节编辑入口。
@@ -1025,7 +930,6 @@ watch([isCatalogStructureLocked, canEditChapterMetadata], ([locked, chapterEdita
     cancelEdit()
   }
 })
-
 const openExportChaptersModal = (mode: 'batch' | 'merge', preselected: number[] = []) => {
   exportChaptersMode.value = mode
   exportPreselectedChapterIds.value = preselected
@@ -1035,7 +939,6 @@ const openExportChaptersModal = (mode: 'batch' | 'merge', preselected: number[] 
   closeImportExportMenu()
   closeSortMenu()
 }
-
 const findChapterInCatalog = (chapterId: number | null) => {
   if (chapterId == null) return null
   for (const volume of catalogItems.value) {
@@ -1044,7 +947,6 @@ const findChapterInCatalog = (chapterId: number | null) => {
   }
   return null
 }
-
 const pickFirstChapter = () => {
   for (const volume of catalogItems.value) {
     const chapter = volume.children.find(item => !isVirtualWorkflowChapter(item))
@@ -1052,7 +954,6 @@ const pickFirstChapter = () => {
   }
   return null
 }
-
 const ensureActiveChapter = () => {
   let target = findChapterInCatalog(editorStore.activeChapterId)
   if (!target) {
@@ -1075,9 +976,7 @@ const ensureActiveChapter = () => {
     editorStore.setChapterWordCount(0)
   }
 }
-
 // 加载目录树
-
 const loadCatalogTree = async () => {
   if (!bookId.value) return
   const loadRevision = ++catalogLoadRevision
@@ -1103,7 +1002,6 @@ const loadCatalogTree = async () => {
     }
   }
 }
-
 watch(
   () => route.params.bookId,
   (newBookId) => {
@@ -1118,7 +1016,6 @@ watch(
     loadCatalogTree()
   }
 )
-
 watch(
   () => [
     Number(props.workflowRunId || 0),
@@ -1133,7 +1030,6 @@ watch(
     void loadCatalogTree()
   }
 )
-
 watch(
   () => editorStore.activeChapterId,
   (id) => {
@@ -1150,7 +1046,6 @@ watch(
     }
   }
 )
-
 watch(chapterWordCount, (count) => {
   const currentId = editorStore.activeChapterId
   if (!currentId) return
@@ -1159,7 +1054,6 @@ watch(chapterWordCount, (count) => {
     chapter.wordCount = typeof count === 'number' ? count : 0
   }
 })
-
 watch(activeChapterTitle, (title) => {
   const currentId = editorStore.activeChapterId
   if (!currentId || typeof title !== 'string') return
@@ -1168,12 +1062,10 @@ watch(activeChapterTitle, (title) => {
     chapter.title = title
   }
 })
-
 // 初始化
 const handleCatalogRefresh = () => {
   void loadCatalogTree()
 }
-
 // 后台生成章节的实时字数：AI 正在写的章不一定是当前打开的章，
 // 靠 activeChapter 的 watch 更新不到，由生成事件直推目录树。
 function handleChapterWordsEvent(event: Event) {
@@ -1184,7 +1076,6 @@ function handleChapterWordsEvent(event: Event) {
   const chapter = findChapterInCatalog(chapterId)
   if (chapter) chapter.wordCount = wordCount
 }
-
 async function handleOpenChapterEvent(event: Event) {
   const chapterId = Number((event as CustomEvent<{ chapterId?: number }>).detail?.chapterId || 0)
   if (!chapterId) return
@@ -1197,7 +1088,6 @@ async function handleOpenChapterEvent(event: Event) {
     await handleChapterClick(chapter)
   }
 }
-
 onMounted(() => {
   // 网页窄屏默认收起目录，让正文优先占满可用宽度。
   if (isWebCompactWriting()) collapsed.value = true
@@ -1208,7 +1098,6 @@ onMounted(() => {
   window.addEventListener('ew-writing-open-chapter', handleOpenChapterEvent as EventListener)
   window.addEventListener('ew-writing-chapter-words', handleChapterWordsEvent as EventListener)
 })
-
 onUnmounted(() => {
   window.removeEventListener('ew-writing-catalog-refresh', handleCatalogRefresh)
   window.removeEventListener('ew-writing-open-chapter', handleOpenChapterEvent as EventListener)
@@ -1218,26 +1107,21 @@ onUnmounted(() => {
   document.removeEventListener('click', closeImportExportMenu)
   document.removeEventListener('click', closeSortMenu)
 })
-
 // 搜索过滤的目录项
 const filteredCatalogItems = computed(() => {
   const keyword = searchText.value.trim().toLowerCase()
-
   // 如果没有搜索关键词，返回原始数据
   if (!keyword) {
     return catalogItems.value
   }
-
   // 过滤目录项
   return catalogItems.value.map(volume => {
     // 检查卷标题是否匹配
     const volumeMatches = volume.title.toLowerCase().includes(keyword)
-
     // 过滤章节
     const filteredChildren = volume.children.filter(chapter =>
       formatChapterDisplayTitle(chapter).toLowerCase().includes(keyword)
     )
-
     // 如果卷标题匹配，显示该卷的所有章节
     if (volumeMatches) {
       return {
@@ -1246,7 +1130,6 @@ const filteredCatalogItems = computed(() => {
         _searchMatched: true // 标记为搜索匹配
       }
     }
-
     // 如果有章节匹配，显示该卷和匹配的章节
     if (filteredChildren.length > 0) {
       return {
@@ -1256,12 +1139,10 @@ const filteredCatalogItems = computed(() => {
         _searchMatched: false
       }
     }
-
     // 都不匹配，返回 null
     return null
   }).filter(Boolean) as Volume[] // 过滤掉 null 值
 })
-
 const escapeHtml = (value: string) => {
   return String(value || '')
     .replace(/&/g, '&amp;')
@@ -1270,36 +1151,29 @@ const escapeHtml = (value: string) => {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;')
 }
-
 const escapeRegExp = (value: string) => {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
-
 // 高亮搜索关键词
 const highlightText = (text: string) => {
   const keyword = searchText.value.trim()
   const safeText = escapeHtml(text)
   if (!keyword) return safeText
-
   // 使用正则表达式进行不区分大小写的替换
   const regex = new RegExp(`(${escapeRegExp(keyword)})`, 'gi')
   return safeText.replace(regex, '<mark class="search-highlight">$1</mark>')
 }
-
 const toggleSidebar = () => {
   collapsed.value = !collapsed.value
 }
-
 const handleVolumeClick = (volume: Volume) => {
   volume.open = !volume.open
   activeId.value = volume.id
   activeType.value = 'volume'
 }
-
 const handleCreateChapterBtn = () => {
   if (isCatalogStructureLocked.value) return
   let targetVolume: Volume | undefined
-
   // 1. 尝试根据当前选中项判断
   if (activeId.value !== null) {
     if (activeType.value === 'volume') {
@@ -1308,12 +1182,10 @@ const handleCreateChapterBtn = () => {
       targetVolume = catalogItems.value.find(v => v.children.some(c => c.id === activeId.value))
     }
   }
-
   // 2. 如果没找到，使用最后一个卷
   if (!targetVolume && catalogItems.value.length > 0) {
     targetVolume = catalogItems.value[catalogItems.value.length - 1]
   }
-
   // 3. 执行新建
   if (targetVolume) {
     handleAddChapter(targetVolume)
@@ -1322,25 +1194,20 @@ const handleCreateChapterBtn = () => {
     handleCreateVolumeBtn()
   }
 }
-
 const handleAddChapter = async (volume: Volume) => {
   if (isCatalogStructureLocked.value) return
   try {
     // 1. 生成标题
     const existingTitles = volume.children.map(c => c.title)
     const nextTitle = generateNextChapterTitle(existingTitles)
-
     await localLibrary.createLocalChapter({
       bookId: bookId.value,
       title: nextTitle,
       volumeId: String(volume.id)
     })
-
     ElMessage.success('新建成功')
-
     // 3. 重新加载目录树
     await loadCatalogTree()
-
     // 4. 找到新创建的章节并进入编辑模式
     const updatedVolume = catalogItems.value.find(v => v.id === volume.id)
     if (updatedVolume && updatedVolume.children.length > 0) {
@@ -1352,7 +1219,6 @@ const handleAddChapter = async (volume: Volume) => {
         title: formatChapterDisplayTitle(newChapter),
         summary: newChapter.summary
       })
-
       // 延迟一下以确保 DOM 更新
       setTimeout(() => {
         startEdit(newChapter)
@@ -1363,13 +1229,11 @@ const handleAddChapter = async (volume: Volume) => {
     showApiError(error, '新建章节失败')
   }
 }
-
 // const handleAddChapter = (volume: Volume) => {
 //   editingChapter.value = null
 //   selectedVolumeId.value = volume.id
 //   createChapterVisible.value = true
 // }
-
 const handleChapterClick = async (chapter: Chapter) => {
   if (chapter.isPlanned || chapter.selectable === false) return
   if (editorStore.activeChapterId === chapter.id) {
@@ -1396,7 +1260,6 @@ const handleChapterClick = async (chapter: Chapter) => {
     summary: chapter.summary
   })
 }
-
 const extractChapterOutline = async (chapter: Chapter) => {
   if (!canEditChapterMetadata.value) return
   if (!bookId.value) return
@@ -1432,7 +1295,6 @@ const extractChapterOutline = async (chapter: Chapter) => {
   }
   ElMessage.success('章纲已更新')
 }
-
 const handleHistoryRestored = async (chapterId: number) => {
   await loadCatalogTree()
   const restored = findChapterInCatalog(chapterId)
@@ -1443,11 +1305,9 @@ const handleHistoryRestored = async (chapterId: number) => {
     })
   }
 }
-
 // const handleVolumeMore = (volume: Volume) => {
 //   console.log('More options for volume:', volume.title)
 // }
-
 // 拖拽逻辑
 const onDragStart = (e: DragEvent, data: DragData) => {
   if (isCatalogStructureLocked.value) {
@@ -1462,7 +1322,6 @@ const onDragStart = (e: DragEvent, data: DragData) => {
     e.dataTransfer.dropEffect = 'move'
   }
 }
-
 const onDrop = async (_e: DragEvent, target: DragData) => {
   if (isCatalogStructureLocked.value) {
     draggedItem.value = null
@@ -1473,38 +1332,30 @@ const onDrop = async (_e: DragEvent, target: DragData) => {
     draggedItem.value = null
     return
   }
-
   const source = draggedItem.value
-
   try {
     // 卷排序
     if (source.type === 'volume' && target.type === 'volume') {
       if (source.index !== undefined && target.index !== undefined && source.index !== target.index) {
         const item = catalogItems.value.splice(source.index, 1)[0]
         catalogItems.value.splice(target.index, 0, item)
-
         const volumeIds = catalogItems.value.map(v => v.id)
         await localLibrary.sortLocalVolumes({ volumeIds, bookId: bookId.value })
         ElMessage.success('排序成功')
       }
     }
-
     // 章节操作
     if (source.type === 'chapter') {
       const sourceVolIndex = source.vIndex!
       const sourceChapIndex = source.cIndex!
-
       // 移动到另一个章节位置（同卷或跨卷）
       if (target.type === 'chapter') {
         const targetVolIndex = target.vIndex!
         const targetChapIndex = target.cIndex!
-
         const item = catalogItems.value[sourceVolIndex].children.splice(sourceChapIndex, 1)[0]
         // 更新 item 的 volumeId
         item.volumeId = String(catalogItems.value[targetVolIndex].id)
-
         catalogItems.value[targetVolIndex].children.splice(targetChapIndex, 0, item)
-
         const chapterIds = getPersistedChapterIds(catalogItems.value[targetVolIndex].children)
         await localLibrary.sortLocalChapters({ chapterIds, volumeId: String(catalogItems.value[targetVolIndex].id) })
         if (sourceVolIndex !== targetVolIndex) {
@@ -1515,18 +1366,14 @@ const onDrop = async (_e: DragEvent, target: DragData) => {
         }
         ElMessage.success('排序成功')
       }
-
       // 移动到卷（作为该卷第一个章节）
       if (target.type === 'volume') {
         const targetVolIndex = target.index!
-
         const item = catalogItems.value[sourceVolIndex].children.splice(sourceChapIndex, 1)[0]
         item.volumeId = String(catalogItems.value[targetVolIndex].id)
-
         catalogItems.value[targetVolIndex].children.unshift(item)
         // 自动展开目标卷
         catalogItems.value[targetVolIndex].open = true
-
         const chapterIds = getPersistedChapterIds(catalogItems.value[targetVolIndex].children)
         await localLibrary.sortLocalChapters({ chapterIds, volumeId: String(catalogItems.value[targetVolIndex].id) })
         if (sourceVolIndex !== targetVolIndex) {
@@ -1544,11 +1391,9 @@ const onDrop = async (_e: DragEvent, target: DragData) => {
     // 失败时重新加载数据
     await loadCatalogTree()
   }
-
   draggedItem.value = null
 }
 </script>
-
 <style scoped lang="scss">
 .writing-sidebar {
   // width: 256px; // 由 store 控制
@@ -1559,24 +1404,19 @@ const onDrop = async (_e: DragEvent, target: DragData) => {
   position: relative;
   z-index: 20;
   transition: width 0.3s ease;
-
   &.no-transition {
     transition: none !important;
   }
-
   &.collapsed {
     width: 0 !important;
     min-width: 0;
-
     .sidebar-content {
       overflow: hidden;
     }
-
     .resize-handle {
       display: none;
     }
   }
-
   .resize-handle {
     position: absolute;
     top: 0;
@@ -1587,13 +1427,11 @@ const onDrop = async (_e: DragEvent, target: DragData) => {
     z-index: 100;
     transition: background-color 0.2s;
     background: transparent;
-
     &:hover,
     &.active {
       background-color: var(--ink-accent);
     }
   }
-
   .toggle-button-wrapper {
     position: absolute;
     top: 50%;
@@ -1601,7 +1439,6 @@ const onDrop = async (_e: DragEvent, target: DragData) => {
     transform: translateY(-50%);
     z-index: 30;
   }
-
   .toggle-button {
     width: 16px;
     height: 40px;
@@ -1617,30 +1454,24 @@ const onDrop = async (_e: DragEvent, target: DragData) => {
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-
     i {
       font-size: 10px;
     }
-
     &:hover {
       background: var(--toggle-btn-hover-bg);
       color: var(--toggle-btn-hover-color, var(--ink-main));
     }
   }
-
   .sidebar-content {
     display: flex;
     flex-direction: column;
     height: 100%;
     overflow: hidden;
   }
-
   .search-section {
     padding: 12px;
-
     .search-wrapper {
       position: relative;
-
       .search-input {
         width: 100%;
         padding: 8px 32px 8px 12px;
@@ -1650,19 +1481,16 @@ const onDrop = async (_e: DragEvent, target: DragData) => {
         background: var(--input-bg);
         color: var(--ink-main);
         transition: all 0.3s ease;
-
         &::placeholder {
           color: var(--ink-sec);
           opacity: 0.6;
         }
-
         &:focus {
           background: var(--input-focus-bg);
           border-color: var(--input-focus-border);
           outline: none;
         }
       }
-
       .search-icon {
         position: absolute;
         right: 12px;
@@ -1672,13 +1500,11 @@ const onDrop = async (_e: DragEvent, target: DragData) => {
         opacity: 0.5;
         font-size: 12px;
         pointer-events: none;
-
         &.clear-icon {
           pointer-events: auto;
           cursor: pointer;
           opacity: 0.6;
           transition: all 0.2s ease;
-
           &:hover {
             opacity: 1;
             color: var(--ink-main);
@@ -1687,13 +1513,11 @@ const onDrop = async (_e: DragEvent, target: DragData) => {
       }
     }
   }
-
   .create-buttons {
     display: flex;
     gap: 8px;
     padding: 0 12px 12px;
     font-family: system-ui, sans-serif;
-
     .create-btn {
       flex: 1;
       padding: 6px 12px;
@@ -1702,30 +1526,25 @@ const onDrop = async (_e: DragEvent, target: DragData) => {
       cursor: pointer;
       transition: all 0.3s ease;
     }
-
     .btn-primary {
       background: var(--btn-primary-bg);
       color: var(--btn-primary-color);
       border: none;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-
       &:hover {
         background: var(--btn-primary-hover-bg);
         color: var(--btn-primary-hover-color);
       }
     }
-
     .btn-outline {
       background: var(--btn-outline-bg);
       border: 1px solid var(--btn-outline-border);
       color: var(--ink-main);
-
       &:hover {
         background: var(--btn-outline-hover-bg);
       }
     }
   }
-
   .catalog-header {
     display: flex;
     justify-content: space-between;
@@ -1735,27 +1554,22 @@ const onDrop = async (_e: DragEvent, target: DragData) => {
     color: var(--ink-sec);
     border-bottom: 1px solid rgba(128, 128, 128, 0.05);
     // font-family: system-ui, sans-serif;
-
     .catalog-actions {
       display: flex;
       gap: 12px;
-
       .action-icon {
         cursor: pointer;
         transition: color 0.3s ease;
-
         &:hover {
           color: var(--ink-main);
         }
       }
     }
   }
-
   .catalog-list {
     flex: 1;
     overflow-y: auto;
     // font-family: system-ui, sans-serif;
-
     // 目录骨架：行高与真实条目对齐，加载完成时列表不跳动。
     // 卷标题行更宽更深，章节行缩进，形态上一眼能看出是目录。
     .catalog-skeleton {
@@ -1763,7 +1577,6 @@ const onDrop = async (_e: DragEvent, target: DragData) => {
       flex-direction: column;
       gap: 10px;
       padding: 10px 12px;
-
       .catalog-skeleton-row {
         height: 14px;
         border-radius: 4px;
@@ -1775,7 +1588,6 @@ const onDrop = async (_e: DragEvent, target: DragData) => {
         );
         background-size: 400% 100%;
         animation: ew-catalog-skeleton-sweep 1.4s ease infinite;
-
         &.is-chapter {
           margin-left: 14px;
           width: 72%;
@@ -1783,7 +1595,6 @@ const onDrop = async (_e: DragEvent, target: DragData) => {
         }
       }
     }
-
     @keyframes ew-catalog-skeleton-sweep {
       0% {
         background-position: 100% 50%;
@@ -1792,7 +1603,6 @@ const onDrop = async (_e: DragEvent, target: DragData) => {
         background-position: 0 50%;
       }
     }
-
     .no-results {
       display: flex;
       flex-direction: column;
@@ -1801,19 +1611,16 @@ const onDrop = async (_e: DragEvent, target: DragData) => {
       padding: 48px 24px;
       color: var(--ink-sec);
       opacity: 0.6;
-
       i {
         font-size: 48px;
         margin-bottom: 16px;
         opacity: 0.3;
       }
-
       p {
         font-size: 14px;
         margin: 0;
       }
     }
-
     .catalog-item {
       display: flex;
       align-items: center;
@@ -1824,14 +1631,12 @@ const onDrop = async (_e: DragEvent, target: DragData) => {
       cursor: pointer;
       position: relative;
       z-index: 1;
-
       // 覆盖主题默认背景，交由伪元素控制
       &.nav-item-active {
         background: transparent !important;
         box-shadow: none !important;
         border: none !important;
       }
-
       // 背景动画
       &::before {
         content: '';
@@ -1844,7 +1649,6 @@ const onDrop = async (_e: DragEvent, target: DragData) => {
         transition: width 0.3s ease;
         z-index: -1;
       }
-
       // 左侧条状动画
       &::after {
         content: '';
@@ -1858,18 +1662,15 @@ const onDrop = async (_e: DragEvent, target: DragData) => {
         transition: height 0.3s ease;
         z-index: -1;
       }
-
       // 悬浮或激活时展开背景
       &:hover::before,
       &.nav-item-active::before {
         width: 100%;
       }
-
       // 激活时展开左侧条
       &.nav-item-active::after {
         height: 100%;
       }
-
       .edit-input {
         flex: 1;
         width: 0;
@@ -1885,24 +1686,20 @@ const onDrop = async (_e: DragEvent, target: DragData) => {
         outline: none;
         transition: all 0.2s;
         margin-right: 8px;
-
         &:focus {
           background: var(--input-focus-bg);
           border-color: var(--input-focus-border);
         }
       }
-
       i {
         margin-right: 8px;
         font-size: 14px;
       }
-
       .item-title {
         flex: 1;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-
         // 搜索高亮样式
         :deep(.search-highlight) {
           background: var(--search-highlight-bg, rgba(255, 235, 59, 0.5));
@@ -1912,22 +1709,18 @@ const onDrop = async (_e: DragEvent, target: DragData) => {
           border-radius: 2px;
         }
       }
-
       .item-count {
         font-size: 12px;
         opacity: 0.5;
       }
-
       &.is-planned {
         cursor: default;
         color: var(--ink-sec);
         opacity: 0.72;
-
         &:hover::before {
           width: 0;
         }
       }
-
       .chapter-workflow-status {
         flex-shrink: 0;
         padding: 2px 7px;
@@ -1935,36 +1728,30 @@ const onDrop = async (_e: DragEvent, target: DragData) => {
         background: color-mix(in srgb, var(--ink-sec) 10%, transparent);
         color: var(--ink-sec);
         font-size: 10px;
-
         &.is-generating {
           background: color-mix(in srgb, var(--ink-accent) 12%, transparent);
           color: var(--ink-accent);
         }
-
         &.is-review_required {
           background: color-mix(in srgb, var(--state-warning) 14%, transparent);
           color: var(--state-warning);
         }
       }
-
       .item-actions {
         margin-left: 8px;
         display: flex;
         align-items: center;
         justify-content: flex-end;
         min-width: 40px;
-
         .chapter-count {
           font-size: 12px;
           color: var(--ink-sec);
           opacity: 0.5;
         }
-
         .action-buttons {
           display: none;
           gap: 2px;
           align-items: center;
-
           .action-btn {
             font-size: 12px;
             color: var(--ink-sec);
@@ -1972,7 +1759,6 @@ const onDrop = async (_e: DragEvent, target: DragData) => {
             // padding: 4px;
             border-radius: 4px;
             transition: all 0.2s;
-
             &:hover {
               color: var(--ink-main);
               background: var(--overlay-hover);
@@ -1980,14 +1766,12 @@ const onDrop = async (_e: DragEvent, target: DragData) => {
           }
         }
       }
-
       &:hover,
       &.force-hover {
         .item-actions {
           .chapter-count {
             display: none;
           }
-
           .action-buttons {
             display: flex;
           }
@@ -1995,7 +1779,6 @@ const onDrop = async (_e: DragEvent, target: DragData) => {
       }
     }
   }
-
   .context-menu {
     position: fixed;
     z-index: 1000;
@@ -2009,28 +1792,23 @@ const onDrop = async (_e: DragEvent, target: DragData) => {
     font-size: 14px;
     color: var(--ink-main);
     animation: fadeIn 0.2s ease;
-
     .menu-header {
       padding: 8px 16px;
-
       .menu-title {
         font-weight: 500;
         margin-bottom: 4px;
       }
-
       .menu-info {
         font-size: 12px;
         color: var(--ink-sec);
         opacity: 0.8;
       }
     }
-
     .menu-divider {
       height: 1px;
       background: var(--ui-border-hover);
       margin: 4px 0;
     }
-
     .menu-item {
       padding: 8px 16px;
       cursor: pointer;
@@ -2038,34 +1816,28 @@ const onDrop = async (_e: DragEvent, target: DragData) => {
       display: flex;
       align-items: center;
       font-size: 14px;
-
       &:hover {
         background: var(--nav-hover-bg);
       }
-
       &.danger {
         color: var(--state-danger);
-
         &:hover {
           background: var(--state-danger-surface);
         }
       }
     }
   }
-
   @keyframes fadeIn {
     from {
       opacity: 0;
       transform: translateY(-5px);
     }
-
     to {
       opacity: 1;
       transform: translateY(0);
     }
   }
 }
-
 @media (max-width: 900px) {
   :global(body.web-runtime .writing-sidebar){
     position: absolute;
@@ -2082,20 +1854,16 @@ const onDrop = async (_e: DragEvent, target: DragData) => {
     transform: translateX(0);
     transition: transform 0.22s ease;
   }
-
   :global(body.web-runtime .writing-sidebar.collapsed){
     width: min(320px, calc(100vw - 64px)) !important;
     transform: translateX(-100%);
   }
-
   :global(body.web-runtime .writing-sidebar .resize-handle){
     display: none;
   }
-
   :global(body.web-runtime .writing-sidebar .toggle-button-wrapper){
     right: -28px;
   }
-
   :global(body.web-runtime .writing-sidebar .toggle-button){
     width: 28px;
     height: 46px;
