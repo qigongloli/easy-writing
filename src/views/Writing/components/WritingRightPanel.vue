@@ -5,7 +5,6 @@ class="writing-right-panel border-gradient-l"
     :style="{ width: activeToolId ? (store.rightPanelWidth + 48) + 'px' : '48px' }">
     <!-- 拖拽手柄 -->
     <div v-if="activeToolId" class="resize-handle" :class="{ active: isResizing }" @mousedown="startResize"></div>
-
     <!-- 内容区域 -->
     <div class="panel-container" :style="{ width: activeToolId ? store.rightPanelWidth + 'px' : '0' }">
       <Transition name="panel-switch" mode="out-in">
@@ -31,7 +30,6 @@ v-else-if="activeToolId === 'preview'" key="preview" :title="currentPanel.title"
           @close="closePanel" />
       </Transition>
     </div>
-
     <!-- 右侧工具栏 -->
     <div class="tool-sidebar">
       <div
@@ -42,7 +40,6 @@ v-for="tool in visibleTools" :key="tool.id" :class="['tool-item', { active: tool
       </div>
     </div>
   </aside>
-
   <EwModal
     v-model:visible="webPopoutVisible"
     :title="poppedPanelTitle"
@@ -86,12 +83,11 @@ v-for="tool in visibleTools" :key="tool.id" :class="['tool-item', { active: tool
     />
   </EwModal>
 </template>
-
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { ElMessage } from 'element-plus'
 import EwModal from '@/components/EwModal/index.vue'
-import { isTauriRuntime } from '@/storage'
+import { isTauriRuntime, isMobileTauri } from '@/storage'
 import { getAppWindowChromeOptions } from '@/utils/desktop-window'
 import {
   useWritingEditorStore,
@@ -108,26 +104,21 @@ import {
   type ReferencePanelToolId,
 } from './reference-panel'
 const store = useWritingEditorStore()
-
 const props = defineProps<{
   bookId?: string | number
   bookTitle?: string
 }>()
-
 const emit = defineEmits<{
   (e: 'lore-updated'): void
 }>()
-
 const bookId = computed(() => props.bookId || '')
 const popoutBodyStyle = { padding: '0', overflow: 'hidden' }
-
 interface Tool {
   id: string
   name: string
   icon: string
   active: boolean
 }
-
 const tools = ref<Tool[]>([
   { id: 'magic', name: '妙笔', icon: 'fa-solid fa-wand-magic-sparkles', active: false },
   { id: 'preview', name: '预览', icon: 'fa-solid fa-mobile-screen-button', active: false },
@@ -139,7 +130,6 @@ const tools = ref<Tool[]>([
   { id: 'inspiration', name: '灵感', icon: 'fa-regular fa-lightbulb', active: false },
 ])
 const visibleTools = computed(() => tools.value)
-
 const syncToolsWithStore = () => {
   if (store.rightPanelActiveTool && !visibleTools.value.some(tool => tool.id === store.rightPanelActiveTool)) {
     store.setRightPanelActiveTool(null)
@@ -148,32 +138,26 @@ const syncToolsWithStore = () => {
     tool.active = store.rightPanelActiveTool === tool.id
   })
 }
-
 syncToolsWithStore()
-
 watch(
   () => store.rightPanelActiveTool,
   () => {
     syncToolsWithStore()
   }
 )
-
 const activeToolId = computed(() => store.rightPanelActiveTool)
 const activeReferenceToolId = computed(() => isReferencePanelTool(activeToolId.value) ? activeToolId.value : null)
 const poppedToolId = ref<ReferencePanelToolId | null>(null)
 const webPopoutVisible = ref(false)
 const popoutHostRef = ref<{ flushPendingSave?: () => Promise<void> } | null>(null)
 let desktopPanelUnlisteners: Array<() => void> = []
-
 const currentPanel = computed(() => {
   const activeTool = visibleTools.value.find(t => t.active)
   return {
     title: activeTool ? `${activeTool.name}` : ''
   }
 })
-
 const poppedPanelTitle = computed(() => poppedToolId.value ? REFERENCE_PANEL_TITLES[poppedToolId.value] : '')
-
 const selectTool = (tool: Tool) => {
   if (tool.active) {
     store.setRightPanelActiveTool(null)
@@ -187,21 +171,17 @@ const selectTool = (tool: Tool) => {
     store.setRightPanelActiveTool(tool.id)
   }
 }
-
 const closePanel = () => {
   store.setRightPanelActiveTool(null)
 }
-
 const handleLoreUpdated = () => {
   emit('lore-updated')
 }
-
 const closeWebPopout = async () => {
   await popoutHostRef.value?.flushPendingSave?.()
   webPopoutVisible.value = false
   poppedToolId.value = null
 }
-
 const dockWebPopout = async () => {
   const toolId = poppedToolId.value
   await popoutHostRef.value?.flushPendingSave?.()
@@ -211,12 +191,10 @@ const dockWebPopout = async () => {
     store.setRightPanelActiveTool(toolId)
   }
 }
-
 const buildDesktopPanelLabel = (toolId: ReferencePanelToolId) => {
   const safeBookId = String(bookId.value).replace(/[^a-zA-Z0-9_:-]/g, '_')
   return `writing-panel-${safeBookId}-${toolId}`
 }
-
 const openDesktopPanel = async (toolId: ReferencePanelToolId) => {
   if (!bookId.value) return false
   try {
@@ -227,7 +205,6 @@ const openDesktopPanel = async (toolId: ReferencePanelToolId) => {
       await existing.setFocus()
       return true
     }
-
     const title = `${REFERENCE_PANEL_TITLES[toolId]}${props.bookTitle ? `《${props.bookTitle}》` : ''}`
     const url = `/writing-panel/${encodeURIComponent(String(bookId.value))}/${toolId}?title=${encodeURIComponent(title)}`
     const panelWindow = new WebviewWindow(label, {
@@ -242,7 +219,6 @@ const openDesktopPanel = async (toolId: ReferencePanelToolId) => {
       focus: true,
       ...getAppWindowChromeOptions(),
     })
-
     return await new Promise<boolean>((resolve) => {
       panelWindow.once('tauri://created', () => resolve(true))
       panelWindow.once('tauri://error', (event) => {
@@ -257,9 +233,9 @@ const openDesktopPanel = async (toolId: ReferencePanelToolId) => {
     return false
   }
 }
-
 const handlePanelPopout = async (toolId: ReferencePanelToolId) => {
-  if (isTauriRuntime()) {
+  // 桌面 Tauri 用独立窗口；移动端（安卓/iOS）不支持桌面多窗口，退回应用内弹窗。
+  if (isTauriRuntime() && !isMobileTauri()) {
     const opened = await openDesktopPanel(toolId)
     if (opened) {
       store.setRightPanelActiveTool(null)
@@ -270,7 +246,6 @@ const handlePanelPopout = async (toolId: ReferencePanelToolId) => {
   webPopoutVisible.value = true
   store.setRightPanelActiveTool(null)
 }
-
 const setupDesktopPanelEvents = async () => {
   if (!isTauriRuntime()) return
   try {
@@ -291,33 +266,27 @@ const setupDesktopPanelEvents = async () => {
     console.error('监听参考窗口事件失败:', error)
   }
 }
-
 // --- 拖拽调整宽度逻辑 ---
 const isResizing = ref(false)
 const startX = ref(0)
 const startWidth = ref(0)
-
 const startResize = (e: MouseEvent) => {
   e.preventDefault() // 防止选中文本
   isResizing.value = true
   startX.value = e.clientX
   startWidth.value = store.rightPanelWidth
-
   document.addEventListener('mousemove', handleMouseMove)
   document.addEventListener('mouseup', stopResize)
   document.body.style.cursor = 'col-resize'
   document.body.style.userSelect = 'none'
 }
-
 const handleMouseMove = (e: MouseEvent) => {
   if (!isResizing.value) return
   const diff = startX.value - e.clientX // 向左拖动增加宽度
   const newWidth = startWidth.value + diff
-
   const clampedWidth = Math.max(WRITING_RIGHT_PANEL_MIN_WIDTH, Math.min(WRITING_RIGHT_PANEL_MAX_WIDTH, newWidth))
   store.setRightPanelWidth(clampedWidth)
 }
-
 const stopResize = () => {
   isResizing.value = false
   document.removeEventListener('mousemove', handleMouseMove)
@@ -325,12 +294,10 @@ const stopResize = () => {
   document.body.style.cursor = ''
   document.body.style.userSelect = ''
 }
-
 onMounted(() => {
   store.setRightPanelWidth(store.rightPanelWidth)
   void setupDesktopPanelEvents()
 })
-
 onBeforeUnmount(() => {
   document.removeEventListener('mousemove', handleMouseMove)
   document.removeEventListener('mouseup', stopResize)
@@ -338,7 +305,6 @@ onBeforeUnmount(() => {
   desktopPanelUnlisteners = []
 })
 </script>
-
 <style scoped lang="scss">
 .writing-right-panel {
   display: flex;
@@ -351,7 +317,6 @@ onBeforeUnmount(() => {
   overflow: hidden;
   position: relative;
   will-change: width;
-
   &.collapsed {
     /* width: 48px; 由 style 动态控制 */
     .panel-container {
@@ -360,15 +325,12 @@ onBeforeUnmount(() => {
       pointer-events: none;
     }
   }
-
   &.no-transition {
     transition: none !important;
-
     .panel-container {
       transition: none !important;
     }
   }
-
   .resize-handle {
     position: absolute;
     left: 0;
@@ -379,13 +341,11 @@ onBeforeUnmount(() => {
     z-index: 100;
     transition: background-color 0.2s;
     background: transparent;
-
     &:hover,
     &.active {
       background-color: var(--ink-accent);
     }
   }
-
   .panel-container {
     position: absolute;
     top: 0;
@@ -398,22 +358,18 @@ onBeforeUnmount(() => {
     overflow: hidden;
     will-change: width, opacity;
   }
-
   .panel-switch-enter-active,
   .panel-switch-leave-active {
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
-
   .panel-switch-enter-from {
     opacity: 0;
     transform: translateX(20px);
   }
-
   .panel-switch-leave-to {
     opacity: 0;
     transform: translateX(-20px);
   }
-
   .tool-sidebar {
     position: absolute;
     top: 0;
@@ -429,7 +385,6 @@ onBeforeUnmount(() => {
     padding: 8px 0;
     gap: 16px;
     flex-shrink: 0; // Prevent sidebar from shrinking
-
     .tool-item {
       position: relative;
       display: flex;
@@ -442,28 +397,22 @@ onBeforeUnmount(() => {
       transition: all 0.3s ease;
       padding: 4px 0;
       width: 100%;
-
       i {
         font-size: 16px;
       }
-
       span {
         font-size: 10px;
         transform: scale(0.9);
       }
-
       &:hover {
         color: var(--ink-main);
       }
-
       &.active {
         color: var(--ink-main);
         background: var(--nav-active-bg);
-
         span {
           font-weight: bold;
         }
-
         &::after {
           content: '';
           position: absolute;
@@ -477,7 +426,6 @@ onBeforeUnmount(() => {
           transition: transform 0.3s ease;
         }
       }
-
       &::after {
         content: '';
         position: absolute;
@@ -490,7 +438,6 @@ onBeforeUnmount(() => {
         transform-origin: center;
         transition: transform 0.3s ease;
       }
-
       /* 第3个工具项前添加分隔线 */
       &:nth-child(3)::before {
         content: '';
@@ -505,7 +452,6 @@ onBeforeUnmount(() => {
     }
   }
 }
-
 .popout-modal-header {
   flex: 1;
   min-width: 0;
@@ -514,7 +460,6 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   gap: 12px;
 }
-
 .popout-modal-title {
   margin: 0;
   min-width: 0;
@@ -525,14 +470,12 @@ onBeforeUnmount(() => {
   font-size: 15px;
   font-weight: 700;
 }
-
 .popout-modal-actions {
   display: flex;
   align-items: center;
   gap: 8px;
   flex: 0 0 auto;
 }
-
 .popout-modal-action {
   width: 28px;
   height: 28px;
@@ -546,23 +489,19 @@ onBeforeUnmount(() => {
   justify-content: center;
   cursor: pointer;
   transition: color 0.2s ease, background 0.2s ease;
-
   &:hover {
     color: var(--ink-main);
     background: var(--btn-ghost-hover-bg);
   }
 }
-
 :global(.reference-panel-modal .ew-modal-body) {
   padding: 0;
   overflow: hidden;
 }
-
 :global(.reference-panel-modal .panel-content) {
   width: 100%;
   height: 100%;
 }
-
 @media (max-width: 900px) {
   :global(body.web-runtime .writing-right-panel){
     position: absolute;
@@ -573,15 +512,12 @@ onBeforeUnmount(() => {
     width: 48px !important;
     overflow: visible;
   }
-
   :global(body.web-runtime .writing-right-panel:not(.collapsed)){
     width: min(560px, calc(100vw - 48px)) !important;
   }
-
   :global(body.web-runtime .writing-right-panel .resize-handle){
     display: none;
   }
-
   :global(body.web-runtime .writing-right-panel .panel-container){
     right: 48px;
     width: min(512px, calc(100vw - 96px)) !important;
