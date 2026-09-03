@@ -10,14 +10,12 @@ use tauri::menu::{
 };
 use tauri::webview::{NewWindowFeatures, NewWindowResponse};
 use tauri::{Manager, Url, WebviewUrl, WebviewWindowBuilder, WindowEvent};
-
 const MAIN_WINDOW_LABEL: &str = "main";
 /// 主窗口关闭兜底超时：前端 onCloseRequested 正常会自行 destroy；
 /// 超时后仍存在且页面已不在应用内（JS 已失联）才强制销毁。
 const MAIN_WINDOW_CLOSE_TIMEOUT_SECS: u64 = 8;
 /// tauri.conf.json build.devUrl 端口
 const DEV_SERVER_PORT: u16 = 4414;
-
 const WEBVIEW_DEFAULT_TITLE: &str = "网页查看";
 const WEBVIEW_DEFAULT_WIDTH: f64 = 1100.0;
 const WEBVIEW_DEFAULT_HEIGHT: f64 = 800.0;
@@ -29,22 +27,18 @@ const MENU_RELOAD: &str = "ew_menu_reload";
 const MENU_DEVTOOLS: &str = "ew_menu_devtools";
 #[cfg(target_os = "macos")]
 const MENU_FEEDBACK: &str = "ew_menu_feedback";
-
 type DesktopAppHandle = tauri::AppHandle<tauri::Wry>;
 type DesktopWebviewWindow = tauri::WebviewWindow<tauri::Wry>;
-
 fn app_display_name(app: &DesktopAppHandle) -> String {
     app.config()
         .product_name
         .clone()
         .unwrap_or_else(|| app.package_info().name.clone())
 }
-
 #[tauri::command]
 fn write_export_file(file_path: String, bytes: Vec<u8>) -> Result<(), String> {
     std::fs::write(file_path, bytes).map_err(|error| error.to_string())
 }
-
 /// 追加式写入取证日志。
 ///
 /// 丢稿类问题事后最难回答的就是"到底写没写进去"，这里为每次章节落盘留一行。
@@ -52,7 +46,6 @@ fn write_export_file(file_path: String, bytes: Vec<u8>) -> Result<(), String> {
 #[tauri::command]
 fn append_app_log(file_path: String, content: String, max_bytes: u64) -> Result<(), String> {
     use std::io::Write;
-
     let path = PathBuf::from(&file_path);
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent).map_err(|error| error.to_string())?;
@@ -73,7 +66,6 @@ fn append_app_log(file_path: String, content: String, max_bytes: u64) -> Result<
     file.write_all(content.as_bytes())
         .map_err(|error| error.to_string())
 }
-
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct ChapterBackupPayload {
@@ -92,7 +84,6 @@ struct ChapterBackupPayload {
     backup_at: i64,
     file_stem: String,
 }
-
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct ChapterBackupResult {
@@ -100,7 +91,6 @@ struct ChapterBackupResult {
     txt_path: String,
     json_path: String,
 }
-
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct ChapterBackupBatchItem {
@@ -110,7 +100,6 @@ struct ChapterBackupBatchItem {
     json_path: String,
     error: Option<String>,
 }
-
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct ReferenceBackupPayload {
@@ -121,7 +110,6 @@ struct ReferenceBackupPayload {
     /// 前端已序列化好的 JSON 文本，这里只负责落盘
     content: String,
 }
-
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct ReferenceBackupBatchItem {
@@ -130,22 +118,17 @@ struct ReferenceBackupBatchItem {
     json_path: String,
     error: Option<String>,
 }
-
 fn home_dir() -> Result<PathBuf, String> {
     #[cfg(target_os = "windows")]
     let raw = std::env::var_os("USERPROFILE").or_else(|| std::env::var_os("HOME"));
-
     #[cfg(not(target_os = "windows"))]
     let raw = std::env::var_os("HOME");
-
     raw.map(PathBuf::from)
         .ok_or_else(|| "无法获取用户主目录".to_string())
 }
-
 fn default_backup_path() -> Result<PathBuf, String> {
     Ok(home_dir()?.join("Documents").join("易创备份"))
 }
-
 fn sanitize_segment(value: &str, fallback: &str) -> String {
     let mut output = String::new();
     for ch in value.trim().chars() {
@@ -153,23 +136,19 @@ fn sanitize_segment(value: &str, fallback: &str) -> String {
             matches!(ch, '<' | '>' | ':' | '"' | '/' | '\\' | '|' | '?' | '*') || ch.is_control();
         output.push(if illegal { '_' } else { ch });
     }
-
     let output = output
         .split_whitespace()
         .collect::<Vec<_>>()
         .join(" ")
         .trim_matches(&[' ', '.'][..])
         .to_string();
-
     let output = if output.is_empty() {
         fallback.to_string()
     } else {
         output
     };
-
     output.chars().take(80).collect()
 }
-
 fn resolve_backup_dir(backup_dir: Option<String>) -> Result<PathBuf, String> {
     let value = backup_dir.unwrap_or_default();
     if value.trim().is_empty() {
@@ -177,7 +156,6 @@ fn resolve_backup_dir(backup_dir: Option<String>) -> Result<PathBuf, String> {
     }
     Ok(PathBuf::from(value))
 }
-
 fn normalize_external_url(url: &str) -> Result<String, String> {
     let trimmed = url.trim();
     if trimmed.is_empty() {
@@ -186,7 +164,6 @@ fn normalize_external_url(url: &str) -> Result<String, String> {
     if trimmed.chars().any(|ch| ch.is_control()) {
         return Err("链接包含非法字符".to_string());
     }
-
     let parsed = Url::parse(trimmed).map_err(|_| "链接地址无效".to_string())?;
     let scheme = parsed.scheme();
     if scheme != "http" && scheme != "https" {
@@ -194,13 +171,11 @@ fn normalize_external_url(url: &str) -> Result<String, String> {
     }
     Ok(parsed.to_string())
 }
-
 fn build_webview_label(url: &str) -> String {
     let mut hasher = DefaultHasher::new();
     url.hash(&mut hasher);
     format!("webview-{:x}", hasher.finish())
 }
-
 fn normalize_window_title(title: Option<String>) -> String {
     title
         .unwrap_or_default()
@@ -211,7 +186,17 @@ fn normalize_window_title(title: Option<String>) -> String {
         .trim()
         .to_string()
 }
-
+#[cfg(target_os = "android")]
+fn create_external_webview_window(
+    _app: &DesktopAppHandle,
+    _target: &str,
+    _title: Option<String>,
+    _features: Option<NewWindowFeatures>,
+) -> Result<DesktopWebviewWindow, String> {
+    // 安卓不支持桌面多窗口/外部 WebView 弹窗，直接返回错误，由前端走外部浏览器打开。
+    Err("移动端不支持应用内打开网页，已改用系统浏览器".to_string())
+}
+#[cfg(not(target_os = "android"))]
 fn create_external_webview_window(
     app: &DesktopAppHandle,
     target: &str,
@@ -221,17 +206,14 @@ fn create_external_webview_window(
     let target = normalize_external_url(target)?;
     let parsed = Url::parse(&target).map_err(|_| "链接地址无效".to_string())?;
     let label = build_webview_label(&target);
-
     if let Some(window) = app.get_webview_window(&label) {
         window.set_focus().map_err(|error| error.to_string())?;
         return Ok(window);
     }
-
     let window_title = match normalize_window_title(title) {
         value if value.is_empty() => WEBVIEW_DEFAULT_TITLE.to_string(),
         value => value,
     };
-
     let app_for_new_window = app.clone();
     let mut builder = WebviewWindowBuilder::new(app, label, WebviewUrl::External(parsed))
         .title(window_title)
@@ -248,7 +230,6 @@ fn create_external_webview_window(
                 // Windows WebView2 不在新窗口回调里同步创建 WebView，避免阻塞窗口消息循环。
                 NewWindowResponse::Deny
             }
-
             #[cfg(not(target_os = "windows"))]
             {
                 let target = url.to_string();
@@ -257,7 +238,6 @@ fn create_external_webview_window(
                     let _ = window.set_focus();
                     return NewWindowResponse::Deny;
                 }
-
                 match create_external_webview_window(
                     &app_for_new_window,
                     &target,
@@ -269,7 +249,6 @@ fn create_external_webview_window(
                 }
             }
         });
-
     if let Some(features) = features {
         #[cfg(target_os = "macos")]
         {
@@ -278,10 +257,8 @@ fn create_external_webview_window(
         }
         builder = builder.window_features(features);
     }
-
     builder.build().map_err(|error| error.to_string())
 }
-
 #[tauri::command]
 async fn open_in_app_browser(
     app: tauri::AppHandle,
@@ -291,12 +268,10 @@ async fn open_in_app_browser(
     let window = create_external_webview_window(&app, &url, title, None)?;
     window.set_focus().map_err(|error| error.to_string())
 }
-
 fn prune_backups_in_dir(chapter_dir: &Path, retention: usize) -> Result<usize, String> {
     if retention == 0 || !chapter_dir.exists() {
         return Ok(0);
     }
-
     let mut groups: BTreeMap<String, Vec<PathBuf>> = BTreeMap::new();
     let entries = std::fs::read_dir(chapter_dir).map_err(|error| error.to_string())?;
     for entry in entries {
@@ -317,10 +292,8 @@ fn prune_backups_in_dir(chapter_dir: &Path, retention: usize) -> Result<usize, S
             groups.entry(stem.to_string()).or_default().push(path);
         }
     }
-
     let mut stems = groups.keys().cloned().collect::<Vec<_>>();
     stems.sort_by(|a, b| b.cmp(a));
-
     let mut removed = 0usize;
     for stem in stems.into_iter().skip(retention) {
         if let Some(paths) = groups.remove(&stem) {
@@ -333,12 +306,10 @@ fn prune_backups_in_dir(chapter_dir: &Path, retention: usize) -> Result<usize, S
     }
     Ok(removed)
 }
-
 #[tauri::command]
 fn get_default_backup_dir() -> Result<String, String> {
     Ok(default_backup_path()?.to_string_lossy().to_string())
 }
-
 #[tauri::command]
 fn write_chapter_backup(payload: ChapterBackupPayload) -> Result<ChapterBackupResult, String> {
     let base_dir = resolve_backup_dir(payload.backup_dir.clone())?;
@@ -359,16 +330,12 @@ fn write_chapter_backup(payload: ChapterBackupPayload) -> Result<ChapterBackupRe
         .join(book_dir)
         .join(volume_dir)
         .join(chapter_dir_name);
-
     std::fs::create_dir_all(&chapter_dir).map_err(|error| error.to_string())?;
-
     let file_stem = sanitize_segment(&payload.file_stem, "backup");
     let txt_path = chapter_dir.join(format!("{}.txt", file_stem));
     let json_path = chapter_dir.join(format!("{}.json", file_stem));
-
     std::fs::write(&txt_path, payload.text_content.as_bytes())
         .map_err(|error| error.to_string())?;
-
     let json_payload = json!({
       "bookId": payload.book_id,
       "volumeId": volume_id,
@@ -384,19 +351,16 @@ fn write_chapter_backup(payload: ChapterBackupPayload) -> Result<ChapterBackupRe
     let json_text =
         serde_json::to_string_pretty(&json_payload).map_err(|error| error.to_string())?;
     std::fs::write(&json_path, json_text.as_bytes()).map_err(|error| error.to_string())?;
-
     Ok(ChapterBackupResult {
         dir_path: chapter_dir.to_string_lossy().to_string(),
         txt_path: txt_path.to_string_lossy().to_string(),
         json_path: json_path.to_string_lossy().to_string(),
     })
 }
-
 #[tauri::command]
 fn prune_chapter_backups(chapter_dir: String, retention: usize) -> Result<usize, String> {
     prune_backups_in_dir(Path::new(&chapter_dir), retention)
 }
-
 /// 批量备份：一次 IPC 写全部章节并按目录去重清理，
 /// 替代前端每章 2 次 invoke 的串行往返（退出备份的 IPC 开销从 C×2 降到 1）。
 /// 单章失败不中断整批，错误随该章结果返回。
@@ -434,7 +398,6 @@ fn write_chapter_backups(
         })
         .collect()
 }
-
 fn write_reference_backup(payload: &ReferenceBackupPayload) -> Result<(String, String), String> {
     let base_dir = resolve_backup_dir(payload.backup_dir.clone())?;
     let book_dir = sanitize_segment(
@@ -443,17 +406,14 @@ fn write_reference_backup(payload: &ReferenceBackupPayload) -> Result<(String, S
     );
     let reference_dir = base_dir.join(book_dir).join("参考数据");
     std::fs::create_dir_all(&reference_dir).map_err(|error| error.to_string())?;
-
     let file_stem = sanitize_segment(&payload.file_stem, "backup");
     let json_path = reference_dir.join(format!("{}.json", file_stem));
     std::fs::write(&json_path, payload.content.as_bytes()).map_err(|error| error.to_string())?;
-
     Ok((
         reference_dir.to_string_lossy().to_string(),
         json_path.to_string_lossy().to_string(),
     ))
 }
-
 /// 参考数据（大纲/角色/设定/时间线/故事线）按书整包备份：
 /// 每书一个 参考数据/ 目录，文件按时间戳命名，与章节备份共用保留份数清理。
 #[tauri::command]
@@ -482,7 +442,6 @@ fn write_reference_backups(
         })
         .collect()
 }
-
 #[tauri::command]
 fn open_backup_dir(path: String) -> Result<(), String> {
     let target = if path.trim().is_empty() {
@@ -491,39 +450,29 @@ fn open_backup_dir(path: String) -> Result<(), String> {
         PathBuf::from(path)
     };
     std::fs::create_dir_all(&target).map_err(|error| error.to_string())?;
-
     #[cfg(target_os = "windows")]
     let mut command = std::process::Command::new("explorer");
-
     #[cfg(target_os = "macos")]
     let mut command = std::process::Command::new("open");
-
     #[cfg(all(not(target_os = "windows"), not(target_os = "macos")))]
     let mut command = std::process::Command::new("xdg-open");
-
     command.arg(&target);
     command.spawn().map_err(|error| error.to_string())?;
     Ok(())
 }
-
 #[tauri::command]
 fn open_external_url(url: String) -> Result<(), String> {
     let target = normalize_external_url(&url)?;
-
     #[cfg(target_os = "windows")]
     let mut command = std::process::Command::new("explorer");
-
     #[cfg(target_os = "macos")]
     let mut command = std::process::Command::new("open");
-
     #[cfg(all(not(target_os = "windows"), not(target_os = "macos")))]
     let mut command = std::process::Command::new("xdg-open");
-
     command.arg(target);
     command.spawn().map_err(|error| error.to_string())?;
     Ok(())
 }
-
 #[tauri::command]
 fn toggle_devtools(_window: DesktopWebviewWindow) {
     #[cfg(debug_assertions)]
@@ -535,21 +484,17 @@ fn toggle_devtools(_window: DesktopWebviewWindow) {
         }
     }
 }
-
 #[tauri::command]
 fn restart_app(app: DesktopAppHandle) {
     app.request_restart();
 }
-
 // ---------------------------------------------------------------------------
 // 提示词 md 文件：全部 AI 提示词存在 Documents/易创提示词/，
 // 设置中心可视化编辑与用户直接改文件双向同步（启动时读入，保存时写回）。
 // ---------------------------------------------------------------------------
-
 fn prompt_dir_path() -> Result<PathBuf, String> {
     Ok(home_dir()?.join("Documents").join("易创提示词"))
 }
-
 fn ensure_prompt_dir() -> Result<PathBuf, String> {
     let dir = prompt_dir_path()?;
     if !dir.exists() {
@@ -557,19 +502,16 @@ fn ensure_prompt_dir() -> Result<PathBuf, String> {
     }
     Ok(dir)
 }
-
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct PromptDocument {
     file_name: String,
     content: String,
 }
-
 #[tauri::command]
 fn get_prompt_dir() -> Result<String, String> {
     Ok(ensure_prompt_dir()?.to_string_lossy().to_string())
 }
-
 #[tauri::command]
 fn list_prompt_documents() -> Result<Vec<PromptDocument>, String> {
     let dir = ensure_prompt_dir()?;
@@ -600,7 +542,6 @@ fn list_prompt_documents() -> Result<Vec<PromptDocument>, String> {
     }
     Ok(documents)
 }
-
 #[tauri::command]
 fn write_prompt_document(file_name: String, content: String) -> Result<(), String> {
     let safe_name = sanitize_segment(&file_name, "提示词");
@@ -610,31 +551,24 @@ fn write_prompt_document(file_name: String, content: String) -> Result<(), Strin
     let dir = ensure_prompt_dir()?;
     std::fs::write(dir.join(safe_name), content).map_err(|error| error.to_string())
 }
-
 #[tauri::command]
 fn open_prompt_dir() -> Result<(), String> {
     let dir = ensure_prompt_dir()?;
-
     #[cfg(target_os = "windows")]
     let mut command = std::process::Command::new("explorer");
-
     #[cfg(target_os = "macos")]
     let mut command = std::process::Command::new("open");
-
     #[cfg(all(not(target_os = "windows"), not(target_os = "macos")))]
     let mut command = std::process::Command::new("xdg-open");
-
     command.arg(&dir);
     command.spawn().map_err(|error| error.to_string())?;
     Ok(())
 }
-
 // ---------------------------------------------------------------------------
 // 榜单隐藏抓取窗口：加载真实网页过反爬（起点 probe.js、番茄懒加载），
 // 注入脚本等目标选择器出现、按需滚动，然后把 HTML 通过事件发回。
 // 权限面收在 capabilities/rank-crawl.json：抓取窗口只被授予 event:emit。
 // ---------------------------------------------------------------------------
-
 /// 允许抓取的站点（与前端 rank-sources 配置对应；防止该命令被用来打开任意网页）
 const RANK_CRAWL_ALLOWED_HOSTS: &[&str] = &[
     "fanqienovel.com",
@@ -648,9 +582,7 @@ const RANK_CRAWL_ALLOWED_HOSTS: &[&str] = &[
 const RANK_CRAWL_DEFAULT_TIMEOUT_MS: u64 = 60_000;
 const RANK_CRAWL_MAX_TIMEOUT_MS: u64 = 180_000;
 const RANK_CRAWL_MAX_SCROLL_ROUNDS: u32 = 40;
-
 static RANK_CRAWL_SEQ: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct RankCrawlRequest {
@@ -663,13 +595,11 @@ struct RankCrawlRequest {
     #[serde(default)]
     timeout_ms: Option<u64>,
 }
-
 #[derive(Debug, Deserialize)]
 struct RankCrawlEmitPayload {
     html: Option<String>,
     error: Option<String>,
 }
-
 fn build_rank_crawl_script(wait_selector: &str, scroll_rounds: u32, event_name: &str) -> String {
     // 选择器/事件名经 serde_json 转成 JS 字符串字面量，杜绝注入
     let selector_json = serde_json::to_string(wait_selector).unwrap_or_else(|_| "\"body\"".into());
@@ -723,7 +653,16 @@ fn build_rank_crawl_script(wait_selector: &str, scroll_rounds: u32, event_name: 
 }})();"#
     )
 }
-
+#[cfg(target_os = "android")]
+#[tauri::command]
+async fn rank_crawl_render_page(
+    _app: DesktopAppHandle,
+    _request: RankCrawlRequest,
+) -> Result<String, String> {
+    // 榜单抓取依赖桌面隐藏窗口加载网页，移动端不支持，前端应隐藏该功能入口。
+    Err("榜单抓取仅支持桌面版".to_string())
+}
+#[cfg(not(target_os = "android"))]
 #[tauri::command]
 async fn rank_crawl_render_page(
     app: DesktopAppHandle,
@@ -743,7 +682,6 @@ async fn rank_crawl_render_page(
     if request.wait_selector.trim().is_empty() {
         return Err("缺少页面就绪选择器".to_string());
     }
-
     let seq = RANK_CRAWL_SEQ.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     let label = format!("rank-crawl-{seq}");
     let event_name = format!("rank-crawl-result-{seq}");
@@ -754,7 +692,6 @@ async fn rank_crawl_render_page(
         .min(RANK_CRAWL_MAX_TIMEOUT_MS)
         .max(5_000);
     let script = build_rank_crawl_script(&request.wait_selector, scroll_rounds, &event_name);
-
     let (sender, receiver) = tauri::async_runtime::channel::<String>(1);
     let sender = std::sync::Arc::new(std::sync::Mutex::new(Some(sender)));
     let sender_for_listener = sender.clone();
@@ -766,7 +703,6 @@ async fn rank_crawl_render_page(
             }
         })
     };
-
     let window = WebviewWindowBuilder::new(&app, &label, WebviewUrl::External(parsed))
         .title("榜单抓取")
         .inner_size(1280.0, 900.0)
@@ -779,20 +715,17 @@ async fn rank_crawl_render_page(
             app.unlisten(listener_id);
             format!("创建抓取窗口失败：{error}")
         })?;
-
     let mut receiver = receiver;
     let outcome = tokio::time::timeout(
         std::time::Duration::from_millis(timeout_ms),
         receiver.recv(),
     )
     .await;
-
     {
         use tauri::Listener;
         app.unlisten(listener_id);
     }
     let _ = window.destroy();
-
     let payload_text = match outcome {
         Ok(Some(payload)) => payload,
         _ => {
@@ -809,7 +742,6 @@ async fn rank_crawl_render_page(
         _ => Err("抓取窗口没有返回页面内容".to_string()),
     }
 }
-
 #[cfg(target_os = "macos")]
 fn build_app_menu(app: &DesktopAppHandle) -> tauri::Result<Menu<tauri::Wry>> {
     let app_name = app_display_name(app);
@@ -819,7 +751,6 @@ fn build_app_menu(app: &DesktopAppHandle) -> tauri::Result<Menu<tauri::Wry>> {
         authors: Some(vec!["Yichuang".to_string()]),
         ..Default::default()
     };
-
     let app_menu = Submenu::with_items(
         app,
         &app_name,
@@ -838,7 +769,6 @@ fn build_app_menu(app: &DesktopAppHandle) -> tauri::Result<Menu<tauri::Wry>> {
             &PredefinedMenuItem::quit(app, Some(&format!("退出{app_name}")))?,
         ],
     )?;
-
     let edit_menu = Submenu::with_items(
         app,
         "编辑",
@@ -853,7 +783,6 @@ fn build_app_menu(app: &DesktopAppHandle) -> tauri::Result<Menu<tauri::Wry>> {
             &PredefinedMenuItem::select_all(app, Some("全选"))?,
         ],
     )?;
-
     let view_menu = Submenu::with_items(
         app,
         "显示",
@@ -873,7 +802,6 @@ fn build_app_menu(app: &DesktopAppHandle) -> tauri::Result<Menu<tauri::Wry>> {
             &PredefinedMenuItem::fullscreen(app, Some("进入全屏"))?,
         ],
     )?;
-
     let window_menu = Submenu::with_id_and_items(
         app,
         WINDOW_SUBMENU_ID,
@@ -884,7 +812,6 @@ fn build_app_menu(app: &DesktopAppHandle) -> tauri::Result<Menu<tauri::Wry>> {
             &PredefinedMenuItem::close_window(app, Some("关闭窗口"))?,
         ],
     )?;
-
     let help_menu = Submenu::with_id_and_items(
         app,
         HELP_SUBMENU_ID,
@@ -898,19 +825,16 @@ fn build_app_menu(app: &DesktopAppHandle) -> tauri::Result<Menu<tauri::Wry>> {
             None::<&str>,
         )?],
     )?;
-
     Menu::with_items(
         app,
         &[&app_menu, &edit_menu, &view_menu, &window_menu, &help_menu],
     )
 }
-
 #[cfg(target_os = "macos")]
 fn handle_menu_event(app: &DesktopAppHandle, event: tauri::menu::MenuEvent) {
     let Some(window) = app.get_webview_window("main") else {
         return;
     };
-
     match event.id().as_ref() {
         MENU_RELOAD => {
             let _ = window.reload();
@@ -932,7 +856,6 @@ fn handle_menu_event(app: &DesktopAppHandle, event: tauri::menu::MenuEvent) {
         _ => {}
     }
 }
-
 /// 主窗口是否仍停留在应用自身页面。
 /// 放行：tauri://localhost（macOS 生产）、http(s)://tauri.localhost（Windows 生产）、
 /// dev 构建下的 devUrl http://localhost:4414。
@@ -951,10 +874,10 @@ fn is_app_shell_url(url: &Url) -> bool {
         _ => false,
     }
 }
-
 /// 主窗口改为代码创建（原在 tauri.conf.json windows 段声明）：
 /// 配置声明的窗口挂不了 on_navigation，无法阻止主 webview 被外链顶级导航接管
 /// （如 a[download] 跨域退化为导航），导航走后前端 JS 全灭、关窗握手失效。
+#[cfg(not(target_os = "android"))]
 fn build_main_window(app: &DesktopAppHandle) -> tauri::Result<DesktopWebviewWindow> {
     let app_name = app_display_name(app);
     let builder = WebviewWindowBuilder::new(app, MAIN_WINDOW_LABEL, WebviewUrl::default())
@@ -966,7 +889,6 @@ fn build_main_window(app: &DesktopAppHandle) -> tauri::Result<DesktopWebviewWind
         .disable_drag_drop_handler()
         // 导航守卫：主 webview 只允许停留在应用页面，外部链接一律拒绝（外链走 open_external_url/open_in_app_browser）
         .on_navigation(|url| is_app_shell_url(url));
-
     // 对应原配置 decorations/titleBarStyle: Overlay/hiddenTitle/trafficLightPosition（红绿灯内嵌标题栏）
     #[cfg(target_os = "macos")]
     let builder = builder
@@ -974,14 +896,19 @@ fn build_main_window(app: &DesktopAppHandle) -> tauri::Result<DesktopWebviewWind
         .title_bar_style(tauri::TitleBarStyle::Overlay)
         .hidden_title(true)
         .traffic_light_position(tauri::LogicalPosition::new(16.0, 24.0));
-
     // Windows 无边框 + 阴影（前端自绘标题栏），等价于原 setup 里的 set_decorations(false) + set_shadow(true)
     #[cfg(target_os = "windows")]
     let builder = builder.decorations(false);
-
     builder.build()
 }
-
+/// 安卓移动端：不手动建窗口，由系统按启动入口创建；这里复用默认标签获取主窗口。
+#[cfg(target_os = "android")]
+fn build_main_window(app: &DesktopAppHandle) -> tauri::Result<DesktopWebviewWindow> {
+    use tauri::WebviewWindowBuilder;
+    WebviewWindowBuilder::new(app, MAIN_WINDOW_LABEL, WebviewUrl::default())
+        .title(&app_display_name(app))
+        .build()
+}
 /// 关窗超时兜底：CloseRequested 后前端正常路径（备份→destroy）会自行关窗；
 /// 若主 webview 已被导航走（JS 失联），Rust 核心因“存在 JS 关闭监听器”会永远 prevent_close，
 /// 此时超时强制 destroy，避免窗口只能强杀进程。
@@ -1006,18 +933,22 @@ fn schedule_main_window_close_fallback(window: &tauri::Window) {
         let _ = window.destroy();
     });
 }
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let builder = tauri::Builder::default()
+    let mut builder = tauri::Builder::default();
+    // 单实例插件仅桌面端支持，移动端（安卓/iOS）由系统接管应用生命周期。
+    #[cfg(not(target_os = "android"))]
+    {
         // 必须最先注册：第二个实例要在做任何初始化（尤其是打开 SQLite）之前就退出。
-        .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+        builder = builder.plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
             if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
                 let _ = window.unminimize();
                 let _ = window.show();
                 let _ = window.set_focus();
             }
-        }))
+        }));
+    }
+    let builder = builder
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_sql::Builder::default().build())
@@ -1050,22 +981,18 @@ pub fn run() {
             write_prompt_document,
             open_prompt_dir,
         ]);
-
     #[cfg(target_os = "macos")]
     let builder = builder
         .menu(build_app_menu)
         .on_menu_event(handle_menu_event);
-
     builder
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::time::{SystemTime, UNIX_EPOCH};
-
     fn temp_backup_dir(name: &str) -> PathBuf {
         let timestamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -1073,7 +1000,6 @@ mod tests {
             .as_millis();
         std::env::temp_dir().join(format!("ew-writing-backup-test-{}-{}", name, timestamp))
     }
-
     fn backup_payload(base_dir: &Path, title: &str, stem: &str) -> ChapterBackupPayload {
         ChapterBackupPayload {
             backup_dir: Some(base_dir.to_string_lossy().to_string()),
@@ -1092,7 +1018,6 @@ mod tests {
             file_stem: stem.to_string(),
         }
     }
-
     #[test]
     fn write_backup_creates_txt_and_json_files() {
         let base_dir = temp_backup_dir("write");
@@ -1102,22 +1027,18 @@ mod tests {
             "20260514-213011-v7",
         ))
         .expect("backup should be written");
-
         let txt = std::fs::read_to_string(&result.txt_path).expect("txt file should exist");
         let json_text = std::fs::read_to_string(&result.json_path).expect("json file should exist");
         let json_value: serde_json::Value =
             serde_json::from_str(&json_text).expect("json should parse");
-
         assert_eq!(txt, "第一段正文\n第二段正文");
         assert_eq!(json_value["bookId"], "12");
         assert_eq!(json_value["chapterId"], 45);
         assert_eq!(json_value["localVersion"], 7);
         assert!(result.dir_path.contains("第1章_非法_字符"));
         assert!(result.dir_path.contains("_45"));
-
         std::fs::remove_dir_all(base_dir).ok();
     }
-
     #[test]
     fn prune_backup_keeps_latest_backup_groups() {
         let base_dir = temp_backup_dir("prune");
@@ -1127,7 +1048,6 @@ mod tests {
             .expect("second backup should be written");
         let third = write_chapter_backup(backup_payload(&base_dir, "第1章", "20260514-213013-v3"))
             .expect("third backup should be written");
-
         let removed = prune_chapter_backups(third.dir_path.clone(), 2).expect("prune should work");
         assert_eq!(removed, 2);
         assert!(!Path::new(&first.txt_path).exists());
@@ -1136,10 +1056,8 @@ mod tests {
         assert!(Path::new(&second.json_path).exists());
         assert!(Path::new(&third.txt_path).exists());
         assert!(Path::new(&third.json_path).exists());
-
         std::fs::remove_dir_all(base_dir).ok();
     }
-
     #[test]
     fn normalize_external_url_accepts_only_http_links() {
         assert_eq!(
@@ -1155,7 +1073,6 @@ mod tests {
         assert!(normalize_external_url("https://").is_err());
         assert!(normalize_external_url("https://example.com/\nnext").is_err());
     }
-
     #[test]
     fn app_shell_url_only_allows_app_origins() {
         assert!(is_app_shell_url(
@@ -1183,13 +1100,11 @@ mod tests {
             &Url::parse("http://localhost:9999/").unwrap()
         ));
     }
-
     #[test]
     fn build_webview_label_is_scoped_by_url() {
         let first = build_webview_label("https://www.lkong.com/");
         let second = build_webview_label("https://www.lkong.com/");
         let third = build_webview_label("https://example.com/");
-
         assert_eq!(first, second);
         assert_ne!(first, third);
         assert!(first.starts_with("webview-"));
