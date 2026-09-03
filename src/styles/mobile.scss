@@ -1,0 +1,73 @@
+/* ==========================================================================
+   移动端（安卓手机/平板）专属增强
+   仅在窄屏（<=1024px，覆盖手机与竖屏平板）生效，不影响桌面端。
+   处理：动态视口高度、安全区域、触控目标、滚动、软键盘、链接长按等。
+   ========================================================================== */
+/* 动态视口高度：安卓地址栏收起/展开、软键盘弹出时，100vh 会跳动，
+   使用 100dvh（支持浏览器内自动回退，老 WebView 会忽略此行保留 100vh）。 */
+@media (max-width: 1024px) {
+  body.web-runtime,
+  body.web-runtime #app,
+  body.web-runtime .app-container {
+    height: 100dvh;
+    height: 100vh;
+  }
+  /* 安全区域：刘海屏/圆角屏/手势条。底部手势条区域留白，避免被系统遮挡。 */
+  body.web-runtime .main-content {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  body.web-runtime .content-wrapper {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  /* 写作页独立布局同样吃安全区域 */
+  body.web-runtime .writing-page .app-container {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  /* 触控优化：消除点击高亮闪烁，移动端长按不再弹出系统选择 */
+  body.web-runtime * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body.web-runtime .ProseMirror,
+  body.web-runtime input,
+  body.web-runtime textarea,
+  body.web-runtime [contenteditable="true"] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  /* 编辑区以外的区域禁止双击缩放/长按选择，贴近原生 App 手感 */
+  body.web-runtime {
+    touch-action: manipulation;
+  }
+  /* 列表滚动容器支持惯性滚动 */
+  body.web-runtime .content-wrapper,
+  body.web-runtime .writing-page,
+  body.web-runtime .catalog-tree,
+  body.web-runtime .el-scrollbar__wrap {
+    -webkit-overflow-scrolling: touch;
+  }
+  /* 桌面 Hover 交互在触屏上无效：隐藏仅 hover 才出现的手柄/按钮，避免误触 */
+  body.web-runtime .resize-handle {
+    display: none !important;
+  }
+}
+/* 平板竖屏 / 手机横屏（<=1024px）横向内容收窄，避免横向滚动 */
+@media (max-width: 1024px) {
+  body.web-runtime .main-content {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+}
+/* 手机（<=480px）：进一步收紧边距、加大触控目标 */
+@media (max-width: 480px) {
+  body.web-runtime .main-content {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+  /* 顶部返回/菜单按钮加大触控面积 */
+  body.web-runtime .mobile-menu-button,
+  body.web-runtime .header-action-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+/* 横屏平板（1024px 以下但横向空间尚可）保持桌面布局，仅由现有断点接管 */

@@ -3,12 +3,9 @@ import {
   type TypingSound,
 } from '@/config/typing-sounds'
 import { countWords } from '@/utils/word-count'
-
 /** TipTap 文档 JSON：存储层当不透明数据，不做结构假设 */
 export type EditorDocJson = unknown
-
 export type BackupInterval = '10m' | '20m' | '30m'
-
 export interface LocalChapterDraft {
   userId: string
   bookId: string
@@ -30,11 +27,9 @@ export interface LocalChapterDraft {
   updatedAt: number
   lastBackedUpAt?: number
 }
-
 export interface StoredLocalChapterDraft extends LocalChapterDraft {
   storageKey: string
 }
-
 export interface LocalWritingSettings {
   backupEnabled: boolean
   backupDir: string
@@ -45,7 +40,6 @@ export interface LocalWritingSettings {
   selfDestructMode: 'off' | '10s' | '20s' | '1m' | '5m'
   backupInterval: BackupInterval
 }
-
 export interface StoredChapterVersion {
   id: string
   userId: string
@@ -59,7 +53,6 @@ export interface StoredChapterVersion {
   remark: string
   createdAt: number
 }
-
 /** 目录树字数覆盖用的轻量行：只取计数，不读正文 payload */
 export interface ChapterWordCountRow {
   bookId: string
@@ -68,15 +61,12 @@ export interface ChapterWordCountRow {
   /** 存量数据字段：纯本地模式下恒为真 */
   dirty: boolean
 }
-
 /** 正文字数口径：与编辑器、目录树、统计保持一致（忽略所有空白） */
 export const countDraftWords = (value: unknown) =>
   countWords(typeof value === 'string' ? value : String(value ?? ''))
-
 /** 书级字数缓存按账号分桶，避免多账号在同一台机器上互相覆盖 */
 export const buildBookWordCountKey = (userId: string | number) =>
   `bookWordCounts:${String(userId)}`
-
 export interface WritingStorage {
   getChapter(chapterId: number): Promise<StoredLocalChapterDraft | null>
   getChapterByIdentity(userId: string, bookId: string | number, chapterId: number): Promise<StoredLocalChapterDraft | null>
@@ -114,7 +104,6 @@ export interface WritingStorage {
     wordCount: number
   ): Promise<void>
 }
-
 export const DEFAULT_LOCAL_WRITING_SETTINGS: LocalWritingSettings = {
   backupEnabled: true,
   backupDir: '',
@@ -124,11 +113,9 @@ export const DEFAULT_LOCAL_WRITING_SETTINGS: LocalWritingSettings = {
   selfDestructMode: 'off',
   backupInterval: '10m',
 }
-
 const hasValue = <T extends string>(value: unknown, values: readonly T[], fallback: T): T => {
   return values.includes(value as T) ? value as T : fallback
 }
-
 export const normalizeLocalWritingSettings = (settings?: Partial<LocalWritingSettings> | null): LocalWritingSettings => {
   const merged = { ...DEFAULT_LOCAL_WRITING_SETTINGS, ...(settings || {}) }
   return {
@@ -142,13 +129,11 @@ export const normalizeLocalWritingSettings = (settings?: Partial<LocalWritingSet
     backupInterval: hasValue(merged.backupInterval, ['10m', '20m', '30m'] as const, '10m'),
   }
 }
-
 export const buildChapterStorageKey = (
   userId: string | number,
   bookId: string | number,
   chapterId: string | number
 ) => `${String(userId)}:${String(bookId)}:${String(chapterId)}`
-
 export const createChapterVersionId = (
   userId: string | number,
   bookId: string | number,
@@ -156,7 +141,6 @@ export const createChapterVersionId = (
   source: string,
   timestamp = Date.now()
 ) => `${String(userId)}:${String(bookId)}:${String(chapterId)}:${source}:${timestamp}`
-
 export const cloneStorageJson = <T = unknown>(value: T): T | null => {
   if (value === undefined || value === null) return null
   try {
@@ -165,7 +149,6 @@ export const cloneStorageJson = <T = unknown>(value: T): T | null => {
     return null
   }
 }
-
 export const normalizeLocalChapterDraft = (payload: LocalChapterDraft): LocalChapterDraft => ({
   ...payload,
   userId: String(payload.userId),
@@ -187,22 +170,26 @@ export const normalizeLocalChapterDraft = (payload: LocalChapterDraft): LocalCha
   updatedAt: Number(payload.updatedAt || Date.now()),
   lastBackedUpAt: payload.lastBackedUpAt ? Number(payload.lastBackedUpAt) : undefined,
 })
-
 export const isTauriRuntime = () => {
   return typeof window !== 'undefined' && Boolean((window as unknown as Record<string, unknown>).__TAURI_INTERNALS__ || (window as unknown as Record<string, unknown>).__TAURI__)
 }
-
+/**
+ * 是否为 Tauri 移动端（安卓/iOS）。
+ * 移动端不支持桌面多窗口、隐藏窗口等桌面 API，需走不同的交互分支。
+ */
+export const isMobileTauri = () => {
+  if (!isTauriRuntime()) return false
+  const ua = typeof navigator !== 'undefined' ? navigator.userAgent : ''
+  return /Android|iPhone|iPad|iPod/i.test(ua)
+}
 export type WritingStorageBackend = 'sqlite' | 'indexeddb'
-
 /**
  * 本地库打开重试的退避间隔（毫秒），首项 0 表示先立即试一次。
  * 杀软扫描、休眠唤醒造成的短暂文件锁靠这几次重试就能扛过去；
  * 总计约 2.3 秒内仍失败才判定为不可用。
  */
 export const SQLITE_OPEN_RETRY_DELAYS = [0, 200, 600, 1500]
-
 export const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms))
-
 export const dispatchStorageEvent = (name: string, detail: Record<string, unknown>) => {
   try {
     window.dispatchEvent(new CustomEvent(name, { detail }))
@@ -210,12 +197,10 @@ export const dispatchStorageEvent = (name: string, detail: Record<string, unknow
     // 非浏览器环境（如单测）忽略。
   }
 }
-
 /** 本地库不可用：只在真的写不进去时抛出，调用方必须让用户看见，不得静默吞掉 */
 export class LocalStorageUnavailableError extends Error {
   readonly backend: WritingStorageBackend
   readonly cause: unknown
-
   constructor(backend: WritingStorageBackend, cause: unknown) {
     super('本地存储当前不可用，内容未能保存到本机')
     this.name = 'LocalStorageUnavailableError'
@@ -223,14 +208,11 @@ export class LocalStorageUnavailableError extends Error {
     this.cause = cause
   }
 }
-
 export type ChapterWriteVerifyReason = 'missing' | 'content_mismatch'
-
 /** 写入声称成功但回读对不上：视同写入失败，绝不能对上层报成功 */
 export class LocalChapterWriteVerifyError extends Error {
   readonly storageKey: string
   readonly reason: ChapterWriteVerifyReason
-
   constructor(storageKey: string, reason: ChapterWriteVerifyReason) {
     super(
       reason === 'missing'
@@ -242,7 +224,6 @@ export class LocalChapterWriteVerifyError extends Error {
     this.reason = reason
   }
 }
-
 /**
  * 写后回读校验。
  *
