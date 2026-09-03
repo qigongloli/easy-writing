@@ -16,7 +16,6 @@
         </div>
       </div>
     </header>
-
     <section v-for="group in groupedFiles" :key="group.title" class="prompt-group fusion-card">
       <div class="prompt-group-title">
         <i class="fa-solid fa-layer-group"></i>
@@ -32,7 +31,6 @@
             <span class="prompt-file-desc">{{ def.description }}</span>
             <i class="fa-solid" :class="expandedId === def.id ? 'fa-angle-up' : 'fa-angle-down'"></i>
           </button>
-
           <div v-if="expandedId === def.id" class="prompt-file-body">
             <div v-for="slot in def.slots" :key="slot.key" class="prompt-slot">
               <div class="prompt-slot-head">
@@ -73,7 +71,6 @@
         </div>
       </div>
     </section>
-
     <EwModal
       v-model:visible="editorVisible"
       :title="editorTitle"
@@ -96,7 +93,6 @@
     </EwModal>
   </section>
 </template>
-
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
@@ -112,16 +108,15 @@ import {
   resetLocalPromptFile,
   saveLocalPromptFile,
 } from '@/storage/local-prompts'
-import { isTauriRuntime } from '@/storage'
-
-const desktopSupported = isTauriRuntime()
+import { isTauriRuntime, isMobileTauri } from '@/storage'
+// 提示词目录/文件系统能力仅桌面端提供，安卓移动端隐藏相关入口。
+const desktopSupported = isTauriRuntime() && !isMobileTauri()
 const promptDir = ref('')
 const expandedId = ref('')
 const saving = ref(false)
 const draftSlots = reactive<Record<string, string>>({})
 const draftTemps = reactive<Record<string, number>>({})
 const modifiedIds = ref(new Set<string>())
-
 const editorVisible = ref(false)
 const editorDef = ref<PromptFileDef | null>(null)
 const editorSlot = ref<PromptSlotDef | null>(null)
@@ -129,7 +124,6 @@ const editorText = ref('')
 const editorTitle = computed(() =>
   editorDef.value && editorSlot.value ? `${editorDef.value.name} · ${editorSlot.value.label}` : ''
 )
-
 const groupedFiles = computed(() => {
   const groups: Array<{ title: string; files: PromptFileDef[] }> = []
   for (const def of PROMPT_FILE_DEFS) {
@@ -139,18 +133,14 @@ const groupedFiles = computed(() => {
   }
   return groups
 })
-
 // 模板字面量里写不了裸的双花括号（会被 Vue 当插值），从脚本出
 const wrapVar = (name: string) => `{{${name}}}`
 const varExample = wrapVar('变量')
-
 const formatTemp = (value?: number) =>
   typeof value === 'number' ? String(Math.round(value * 100) / 100) : ''
-
 const refreshModified = () => {
   modifiedIds.value = new Set(PROMPT_FILE_DEFS.filter(def => isPromptFileModified(def.id)).map(def => def.id))
 }
-
 const loadDrafts = (fileId: string) => {
   const slots = getLocalPromptSlots(fileId)
   for (const key of Object.keys(draftSlots)) delete draftSlots[key]
@@ -159,7 +149,6 @@ const loadDrafts = (fileId: string) => {
   for (const key of Object.keys(draftTemps)) delete draftTemps[key]
   Object.assign(draftTemps, temps)
 }
-
 const toggleFile = (fileId: string) => {
   if (expandedId.value === fileId) {
     expandedId.value = ''
@@ -168,7 +157,6 @@ const toggleFile = (fileId: string) => {
   expandedId.value = fileId
   loadDrafts(fileId)
 }
-
 const persistFile = async (def: PromptFileDef, message: string) => {
   if (saving.value) return
   saving.value = true
@@ -182,18 +170,15 @@ const persistFile = async (def: PromptFileDef, message: string) => {
     saving.value = false
   }
 }
-
 const handleTempChange = (def: PromptFileDef) => {
   void persistFile(def, `「${def.name}」温度已保存，立即生效`)
 }
-
 const openEditor = (def: PromptFileDef, slot: PromptSlotDef) => {
   editorDef.value = def
   editorSlot.value = slot
   editorText.value = draftSlots[slot.key] || ''
   editorVisible.value = true
 }
-
 const handleEditorSave = async () => {
   const def = editorDef.value
   const slot = editorSlot.value
@@ -202,7 +187,6 @@ const handleEditorSave = async () => {
   await persistFile(def, `「${def.name} · ${slot.label}」已保存，立即生效`)
   editorVisible.value = false
 }
-
 const handleReset = async (def: PromptFileDef) => {
   try {
     await inkConfirm(`「${def.name}」的全部提示词将恢复为内置默认值。`, '恢复默认', {
@@ -225,7 +209,6 @@ const handleReset = async (def: PromptFileDef) => {
     saving.value = false
   }
 }
-
 const handleOpenDir = async () => {
   try {
     await openPromptDir()
@@ -233,7 +216,6 @@ const handleOpenDir = async () => {
     ElMessage.error(String(error?.message || '打开文件夹失败'))
   }
 }
-
 onMounted(() => {
   refreshModified()
   if (desktopSupported) {
@@ -243,7 +225,6 @@ onMounted(() => {
   }
 })
 </script>
-
 <style scoped lang="scss">
 .prompts-page {
   min-height: 100%;
@@ -253,7 +234,6 @@ onMounted(() => {
   flex-direction: column;
   gap: 16px;
 }
-
 .prompts-header {
   .prompts-title {
     h1 {
@@ -261,7 +241,6 @@ onMounted(() => {
       font-weight: 700;
       margin: 0 0 8px;
     }
-
     p {
       margin: 0;
       font-size: 13px;
@@ -271,25 +250,21 @@ onMounted(() => {
     }
   }
 }
-
 .dir-row {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-top: 10px;
-
   .dir-path {
     font-size: 12px;
     color: var(--ink-sec);
     word-break: break-all;
   }
 }
-
 .prompt-group {
   padding: 16px 18px;
   border-radius: 10px;
 }
-
 .prompt-group-title {
   display: flex;
   align-items: center;
@@ -297,24 +272,20 @@ onMounted(() => {
   font-size: 15px;
   color: var(--ink-main);
   margin-bottom: 12px;
-
   i {
     color: var(--ink-accent);
   }
 }
-
 .prompt-file-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-
 .prompt-file {
   border: 1px solid var(--btn-ghost-border);
   border-radius: 8px;
   overflow: hidden;
 }
-
 .prompt-file-head {
   width: 100%;
   display: flex;
@@ -325,24 +296,20 @@ onMounted(() => {
   border: none;
   cursor: pointer;
   text-align: left;
-
   &:hover {
     background: var(--bg-hover);
   }
-
   .prompt-file-name {
     font-weight: 600;
     color: var(--ink-main);
     white-space: nowrap;
   }
-
   .prompt-modified-badge {
     font-style: normal;
     font-size: 11px;
     color: var(--ink-accent);
     margin-left: 6px;
   }
-
   .prompt-file-desc {
     flex: 1;
     font-size: 12px;
@@ -351,12 +318,10 @@ onMounted(() => {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-
   i {
     color: var(--ink-sec);
   }
 }
-
 .prompt-file-body {
   padding: 4px 12px 12px;
   border-top: 1px solid var(--btn-ghost-border);
@@ -364,19 +329,16 @@ onMounted(() => {
   flex-direction: column;
   gap: 12px;
 }
-
 .prompt-slot-head {
   display: flex;
   align-items: center;
   gap: 10px;
   margin: 8px 0 6px;
-
   .prompt-slot-label {
     font-size: 13px;
     font-weight: 600;
     color: var(--ink-main);
   }
-
   .prompt-slot-temp {
     margin-left: auto;
     display: grid;
@@ -385,24 +347,20 @@ onMounted(() => {
     gap: 10px;
     font-size: 12px;
     color: var(--ink-sec);
-
     strong {
       font-size: 12px;
       color: var(--ink-main);
       text-align: right;
       font-variant-numeric: tabular-nums;
     }
-
     :deep(.el-slider) {
       --el-slider-height: 4px;
       --el-slider-button-size: 14px;
     }
   }
-
   .prompt-slot-vars {
     font-size: 12px;
     color: var(--ink-sec);
-
     code {
       margin-right: 4px;
       padding: 0 4px;
@@ -411,7 +369,6 @@ onMounted(() => {
     }
   }
 }
-
 .prompt-slot-preview {
   width: 100%;
   display: flex;
@@ -423,15 +380,12 @@ onMounted(() => {
   background: var(--surface-1);
   cursor: pointer;
   text-align: left;
-
   &:hover {
     border-color: var(--ink-accent);
-
     i {
       color: var(--ink-accent);
     }
   }
-
   .prompt-slot-preview-text {
     flex: 1;
     font-size: 13px;
@@ -443,12 +397,10 @@ onMounted(() => {
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     overflow: hidden;
-
     &.is-empty {
       color: var(--ink-sec);
     }
   }
-
   i {
     margin-top: 3px;
     font-size: 12px;
@@ -456,36 +408,30 @@ onMounted(() => {
     flex-shrink: 0;
   }
 }
-
 .prompt-file-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
 }
-
 .prompt-editor-body {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-
 .prompt-editor-vars {
   margin: 0;
   font-size: 12px;
   color: var(--ink-sec);
-
   code {
     margin-right: 4px;
     padding: 0 4px;
     border-radius: 4px;
     background: var(--surface-2);
   }
-
   span {
     margin-left: 6px;
   }
 }
-
 .prompt-editor-input {
   width: 100%;
   height: 56vh;
@@ -498,7 +444,6 @@ onMounted(() => {
   font-size: 13px;
   line-height: 1.8;
   font-family: inherit;
-
   &:focus {
     outline: none;
     border-color: var(--ink-accent);

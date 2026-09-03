@@ -71,3 +71,61 @@
   }
 }
 /* 横屏平板（1024px 以下但横向空间尚可）保持桌面布局，仅由现有断点接管 */
+/* ==========================================================================
+   移动端"全元素"适配（<=1024px，覆盖手机与竖屏平板）
+   核心目标：任何页面元素都不超出视口宽度，弹窗/抽屉/媒体自适应，杜绝横向滚动。
+   ========================================================================== */
+@media (max-width: 1024px) {
+  /* 防横向溢出：整条布局链限制在视口内 */
+  body.web-runtime,
+  body.web-runtime #app,
+  body.web-runtime .app-container,
+  body.web-runtime .main-content,
+  body.web-runtime .content-wrapper {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  /* 媒体与表格自适应，避免撑破布局 */
+  body.web-runtime img,
+  body.web-runtime video,
+  body.web-runtime canvas,
+  body.web-runtime table {
+    max-width: 100%;
+  }
+  body.web-runtime img {
+    height: auto;
+  }
+  /* Element Plus 弹窗/消息框适配手机视口（项目主要用自定义 EwModal，影响面小） */
+  body.web-runtime .el-dialog {
+    --el-dialog-width: calc(100vw - 24px) !important;
+    max-width: calc(100vw - 24px);
+    margin-top: 8vh !important;
+  }
+  body.web-runtime .el-message-box {
+    max-width: calc(100vw - 32px);
+  }
+  body.web-runtime .el-drawer {
+    width: 100% !important;
+  }
+  body.web-runtime .el-dialog,
+  body.web-runtime .el-message-box,
+  body.web-runtime .el-drawer {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+/* 手机（<=480px）：进一步加大触控目标、输入框字号防缩放 */
+@media (max-width: 480px) {
+  body.web-runtime button,
+  body.web-runtime .el-button,
+  body.web-runtime .el-input__wrapper,
+  body.web-runtime .el-select__wrapper {
+    min-height: 40px;
+  }
+  /* 输入框字号 >=16px，避免安卓/iOS 聚焦时自动放大页面 */
+  body.web-runtime .el-input__inner,
+  body.web-runtime .el-textarea__inner,
+  body.web-runtime input,
+  body.web-runtime textarea {
+    font-size: 16px;
+  }
+}

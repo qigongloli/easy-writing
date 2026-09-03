@@ -3,14 +3,12 @@
   <div id="app" :class="{ 'desktop-shell': desktopShell, 'web-shell': !desktopShell }">
     <DesktopTitleBar v-if="desktopShell" />
     <GlobalSearchPalette v-if="desktopShell" />
-
     <div class="app-shell-body">
       <!-- 背景层 -->
       <div class="ink-bg-container">
         <img :src="themeStore.currentSkinObj.img" class="ink-bg-image" alt="" @error="(e) => ((e.target as HTMLElement).style.visibility = 'hidden')" />
       </div>
       <div class="paper-texture"></div>
-
       <!-- 路由视图 -->
       <router-view v-slot="{ Component }">
         <transition name="fade" mode="out-in">
@@ -18,7 +16,6 @@
         </transition>
       </router-view>
     </div>
-
     <DesktopUpdateModal
       :visible="desktopUpdateVisible"
       :state="desktopUpdateState"
@@ -27,7 +24,6 @@
       @retry="retryDesktopUpdate"
       @restart="restartAfterDesktopUpdate"
     />
-
     <!-- 关窗保存提示：关闭前快照/备份期间给出可见反馈，避免"点了没反应"的观感 -->
     <div v-if="desktopClosing" class="app-closing-overlay">
       <div class="app-closing-card">
@@ -35,7 +31,6 @@
         <span>正在保存并备份您的作品，即将退出…</span>
       </div>
     </div>
-
     <div
       v-if="appContextMenuVisible"
       class="app-context-menu"
@@ -55,13 +50,12 @@
   </div>
   </el-config-provider>
 </template>
-
 <script setup lang="ts">
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import { ref, onBeforeUnmount, onMounted } from 'vue'
 import { ElMessage, ElNotification } from 'element-plus'
 import { useThemeStore } from '@/stores/theme'
-import { isTauriRuntime } from '@/storage'
+import { isTauriRuntime, isMobileTauri } from '@/storage'
 import { getLocalBackupService } from '@/storage/local-backup-service'
 import {
   checkDesktopUpdate,
@@ -73,13 +67,13 @@ import { openLink } from '@/utils/external-link'
 import DesktopTitleBar from '@/components/DesktopTitleBar.vue'
 import GlobalSearchPalette from '@/components/GlobalSearchPalette.vue'
 import DesktopUpdateModal from '@/components/DesktopUpdateModal.vue'
-
 const themeStore = useThemeStore()
 const backupService = getLocalBackupService()
-const desktopShell = isTauriRuntime()
+// 桌面壳仅对真正的桌面 Tauri 生效；安卓/iOS 移动端走 web-runtime 响应式布局，
+// 否则 body 会被加上 desktop-runtime（min-width:1200px），手机上渲染成超宽桌面版。
+const desktopShell = isTauriRuntime() && !isMobileTauri()
 // tauri 自动更新器（下载安装那套）仍停用；版本提醒走下面的轻量检查
 const desktopUpdaterEnabled = false
-
 // 轻量更新提醒：启动稳定后查一次 GitHub Releases，有新版弹通知点开下载页。
 // 点通知正文=打开下载页；点右上角 × 关闭=这个版本不再提醒。
 const scheduleReleaseNotice = () => {
@@ -100,9 +94,7 @@ const scheduleReleaseNotice = () => {
   }, 8000)
 }
 const runtimeBodyClass = desktopShell ? 'desktop-runtime' : 'web-runtime'
-
 type AppContextAction = 'cut' | 'copy' | 'paste' | 'selectAll'
-
 const appContextMenuVisible = ref(false)
 const appContextMenuX = ref(0)
 const appContextMenuY = ref(0)
@@ -110,7 +102,6 @@ const appContextMenuItems = ref<Array<{ label: string; action: AppContextAction 
 let appContextTarget: HTMLElement | null = null
 let unlistenCloseRequested: (() => void) | null = null
 let desktopCloseConfirmed = false
-
 const desktopUpdateVisible = ref(false)
 // 关窗保存进行中（遮罩提示）
 const desktopClosing = ref(false)
@@ -123,12 +114,10 @@ const desktopUpdateState = ref<DesktopUpdateSnapshot>({
 const desktopUpdatePreviewEnabled =
   import.meta.env.DEV &&
   new URLSearchParams(window.location.search).get('previewUpdate') === '1'
-
 const closeAppContextMenu = () => {
   appContextMenuVisible.value = false
   appContextTarget = null
 }
-
 const getEditableTarget = (target: EventTarget | null) => {
   if (!(target instanceof Element)) return null
   const editable = target.closest('input, textarea, [contenteditable="true"]') as HTMLElement | null
@@ -137,35 +126,29 @@ const getEditableTarget = (target: EventTarget | null) => {
   }
   return editable
 }
-
 const isReadonlyEditable = (target: HTMLElement) => {
   if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
     return target.disabled || target.readOnly
   }
   return false
 }
-
 const setContextMenuPosition = (event: MouseEvent, itemCount: number) => {
   appContextMenuX.value = Math.min(event.clientX, window.innerWidth - 172)
   appContextMenuY.value = Math.min(event.clientY, window.innerHeight - itemCount * 36 - 12)
 }
-
 const showAppContextMenu = (event: MouseEvent, items: Array<{ label: string; action: AppContextAction }>, target: HTMLElement | null) => {
   appContextTarget = target
   appContextMenuItems.value = items
   setContextMenuPosition(event, items.length)
   appContextMenuVisible.value = true
 }
-
 const handleGlobalContextMenu = (event: MouseEvent) => {
   event.preventDefault()
   closeAppContextMenu()
-
   const target = event.target instanceof Element ? event.target : null
   if (!target || target.closest('.app-context-menu, .context-menu, .custom-bubble-menu, .ai-bubble-menu, .editor-wrapper, .ProseMirror, .reference-panel-content, .outline-tree, .setting-tree')) {
     return
   }
-
   const editable = getEditableTarget(target)
   if (editable) {
     const readonly = isReadonlyEditable(editable)
@@ -180,12 +163,10 @@ const handleGlobalContextMenu = (event: MouseEvent) => {
     showAppContextMenu(event, items, editable)
     return
   }
-
   if (window.getSelection()?.toString()) {
     showAppContextMenu(event, [{ label: '复制', action: 'copy' }], null)
   }
 }
-
 const insertTextToContextTarget = (text: string) => {
   const target = appContextTarget
   if (!target) return
@@ -199,7 +180,6 @@ const insertTextToContextTarget = (text: string) => {
   }
   document.execCommand('insertText', false, text)
 }
-
 const selectContextTargetText = () => {
   const target = appContextTarget
   if (!target) return
@@ -214,7 +194,6 @@ const selectContextTargetText = () => {
   selection?.removeAllRanges()
   selection?.addRange(range)
 }
-
 const handleAppContextMenuAction = async (action: AppContextAction) => {
   if (action === 'selectAll') {
     selectContextTargetText()
@@ -233,7 +212,6 @@ const handleAppContextMenuAction = async (action: AppContextAction) => {
   }
   closeAppContextMenu()
 }
-
 const destroyDesktopSubWindows = async () => {
   if (!isTauriRuntime()) return
   const { getAllWindows } = await import('@tauri-apps/api/window')
@@ -241,7 +219,6 @@ const destroyDesktopSubWindows = async () => {
   // 主窗口退出前统一销毁独立子窗口，避免 Tauri 进程留下可见窗口。
   await Promise.allSettled(subWindows.map((item) => item.destroy()))
 }
-
 const setupDesktopCloseBackup = async () => {
   if (!isTauriRuntime()) return
   try {
@@ -253,7 +230,6 @@ const setupDesktopCloseBackup = async () => {
       if (desktopCloseConfirmed) return
       event.preventDefault()
       desktopClosing.value = true
-
       try {
         const backup = await backupService.backupBeforeExit()
         if (!backup.ok) {
@@ -275,7 +251,6 @@ const setupDesktopCloseBackup = async () => {
         if (!shouldExit) return
         desktopClosing.value = true
       }
-
       desktopCloseConfirmed = true
       try {
         await destroyDesktopSubWindows()
@@ -287,7 +262,6 @@ const setupDesktopCloseBackup = async () => {
     console.error('setup desktop close backup failed', error)
   }
 }
-
 const applyDesktopUpdateState = (state: DesktopUpdateSnapshot) => {
   const activeUpdateInfo = desktopUpdateVisible.value && !desktopUpdateNotesOnly.value
     ? desktopUpdateState.value.info
@@ -301,7 +275,6 @@ const applyDesktopUpdateState = (state: DesktopUpdateSnapshot) => {
     desktopUpdateVisible.value = true
   }
 }
-
 const runDesktopUpdateCheck = async (silent = false) => {
   const result = await checkDesktopUpdate({
     silent,
@@ -311,7 +284,6 @@ const runDesktopUpdateCheck = async (silent = false) => {
     desktopUpdateVisible.value = false
   }
 }
-
 const showPendingDesktopUpdateNotes = async () => {
   const info = await consumePendingDesktopUpdateNotes()
   if (!info) return
@@ -323,7 +295,6 @@ const showPendingDesktopUpdateNotes = async () => {
   desktopUpdateNotesOnly.value = true
   desktopUpdateVisible.value = true
 }
-
 const showDesktopUpdatePreview = () => {
   desktopUpdateState.value = {
     phase: 'installed',
@@ -342,27 +313,22 @@ const showDesktopUpdatePreview = () => {
   desktopUpdateNotesOnly.value = true
   desktopUpdateVisible.value = true
 }
-
 const handleDesktopUpdateRequest = () => {
   if (!desktopUpdaterEnabled) return
   void runDesktopUpdateCheck(false)
 }
-
 const retryDesktopUpdate = () => {
   void runDesktopUpdateCheck(false)
 }
-
 const closeDesktopUpdateNotes = () => {
   desktopUpdateVisible.value = false
   desktopUpdateNotesOnly.value = false
 }
-
 const restartAfterDesktopUpdate = async () => {
   if (!isTauriRuntime()) return
   const { invoke } = await import('@tauri-apps/api/core')
   await invoke('restart_app')
 }
-
 // 周期性本地文件备份：把设置里的“备份间隔(10/20/30分钟)”接上真正的定时器。
 // 之前该设置只存值不生效；这里用自排程的 setTimeout，每轮重新读取间隔，改设置下一轮即生效。
 const BACKUP_INTERVAL_MS: Record<string, number> = {
@@ -372,7 +338,6 @@ const BACKUP_INTERVAL_MS: Record<string, number> = {
 }
 let backupTimer: ReturnType<typeof setTimeout> | null = null
 let periodicBackupRunning = false
-
 const schedulePeriodicBackup = async () => {
   if (!backupService.isSupported()) return
   let delay = BACKUP_INTERVAL_MS['10m']
@@ -397,7 +362,6 @@ const schedulePeriodicBackup = async () => {
     void schedulePeriodicBackup()
   }, delay)
 }
-
 // 本地库(SQLite)打不开时不再退回浏览器存储（那会造成两个库分叉、跨会话丢稿），
 // 而是明确告知"存不进去"。提示必须常驻：8 秒的 toast 用户走开就错过，
 // 然后会以为一切正常继续写几个小时，最后整段丢失。
@@ -419,12 +383,10 @@ const handleStorageUnavailable = (event: Event) => {
     },
   })
 }
-
 const handleStorageRecovered = () => {
   storageUnavailableHandle?.close()
   storageUnavailableHandle = null
 }
-
 onMounted(() => {
   // 运行时类名用于隔离网页响应式样式和桌面端窗口样式。
   document.body.classList.add(runtimeBodyClass)
@@ -444,7 +406,6 @@ onMounted(() => {
   }
   scheduleReleaseNotice()
 })
-
 onBeforeUnmount(() => {
   document.body.classList.remove(runtimeBodyClass)
   window.removeEventListener('contextmenu', handleGlobalContextMenu, true)
@@ -461,7 +422,6 @@ onBeforeUnmount(() => {
   unlistenCloseRequested = null
 })
 </script>
-
 <style scoped>
 #app {
   --desktop-titlebar-height: 0px;
@@ -469,14 +429,12 @@ onBeforeUnmount(() => {
   height: 100vh;
   overflow: hidden;
 }
-
 #app.desktop-shell {
   --desktop-titlebar-height: 44px;
   display: flex;
   flex-direction: column;
   background: var(--bg-main);
 }
-
 .app-shell-body {
   position: relative;
   flex: 1 1 auto;
@@ -484,7 +442,6 @@ onBeforeUnmount(() => {
   height: 100%;
   overflow: hidden;
 }
-
 .app-context-menu {
   position: fixed;
   z-index: 10000;
@@ -496,7 +453,6 @@ onBeforeUnmount(() => {
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18);
   backdrop-filter: blur(10px);
 }
-
 .app-context-menu button {
   width: 100%;
   height: 32px;
@@ -509,11 +465,9 @@ onBeforeUnmount(() => {
   text-align: left;
   cursor: pointer;
 }
-
 .app-context-menu button:hover {
   background: var(--nav-active-bg);
 }
-
 .app-closing-overlay {
   position: fixed;
   inset: 0;
@@ -524,7 +478,6 @@ onBeforeUnmount(() => {
   background: color-mix(in srgb, var(--bg-main, #f5f1e8) 72%, transparent);
   backdrop-filter: blur(3px);
 }
-
 .app-closing-card {
   display: inline-flex;
   align-items: center;
@@ -538,7 +491,6 @@ onBeforeUnmount(() => {
   font-size: 14px;
   font-weight: 600;
 }
-
 .app-closing-card i {
   color: var(--ink-accent, #b04a39);
   font-size: 16px;
